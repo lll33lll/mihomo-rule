@@ -15,7 +15,7 @@ const vm = require('vm');
 const root = path.resolve(__dirname, '..');
 let code = fs.readFileSync(path.join(root, 'Script', 'override.js'), 'utf8');
 code += `
-;module.exports = { main, regions, junkRe, directProxies, otherRegionName, healthCheckUrl, icon };`;
+;module.exports = { main, regions, junkRe, homeRe, directProxies, otherRegionName, healthCheckUrl, icon };`;
 const sandbox = { module: { exports: {} }, console };
 vm.createContext(sandbox);
 vm.runInContext(code, sandbox, { filename: 'override.js' });
@@ -62,7 +62,7 @@ function block(v, indent) {
 }
 
 // ------------------------------------------------------------------ 跑一遍脚本
-/** 每个地区一个探针节点，外加一个不属于任何地区的，逼出全部策略组 */
+/** 每个地区一个探针节点，外加不属于任何地区的和家宽的，逼出全部策略组 */
 const probes = S.regions
   .map((r, i) => ({
     name: `${r.flag} probe-${i}`,
@@ -72,7 +72,11 @@ const probes = S.regions
     cipher: 'aes-128-gcm',
     password: 'probe',
   }))
-  .concat([{ name: 'probe-other', type: 'ss', server: '10.0.1.1', port: 8388, cipher: 'aes-128-gcm', password: 'p' }]);
+  .concat([
+    { name: 'probe-other', type: 'ss', server: '10.0.1.1', port: 8388, cipher: 'aes-128-gcm', password: 'p' },
+    // 逼出「自建/家宽节点」组
+    { name: 'probe-家宽', type: 'ss', server: '10.0.1.2', port: 8388, cipher: 'aes-128-gcm', password: 'p' },
+  ]);
 
 const probeNames = new Set(probes.map((p) => p.name));
 const cfg = S.main({ proxies: probes });
@@ -98,7 +102,7 @@ const groups = cfg['proxy-groups'].map((g) => {
   out['include-all'] = true;
   // include-all 会把上面 proxies 里的直连节点也拉进来，必须排掉
   out['exclude-type'] = 'DIRECT';
-  const bare = g.name.replace(' · 自动', '');
+  const bare = g.name.replace(/(自动|均衡)$/, '');
   if (regionByName[bare]) {
     out.filter = reSrc(regionByName[bare].re);
     out['exclude-filter'] = junk;
@@ -106,8 +110,12 @@ const groups = cfg['proxy-groups'].map((g) => {
   } else if (bare === S.otherRegionName) {
     out['exclude-filter'] = `${excludeAllRegions}|${junk}`;
     out['empty-fallback'] = 'REJECT';
+  } else if (g.name === '自建/家宽节点') {
+    out.filter = reSrc(S.homeRe);
+    out['exclude-filter'] = junk;
+    out['empty-fallback'] = 'REJECT';
   } else {
-    // 手动选择 / 自动选择 / 负载均衡 / 故障转移：全部节点
+    // 全部节点 / 故障转移 / Include_all 型分流组：全部节点
     out['exclude-filter'] = junk;
   }
   if (!out.proxies.length) delete out.proxies;
@@ -148,7 +156,7 @@ L.push("#    exclude-type: 'direct|reject|rematch'");
 L.push(`#    health-check: { enable: true, url: ${S.healthCheckUrl}, interval: 600, lazy: true }`);
 L.push("#    override: { udp: true, additional-prefix: 'B | ' }");
 L.push('');
-L.push('# --- 直连节点，供「直连」组切换 IP 栈 ---');
+L.push('# --- 内置直连节点 ---');
 L.push('proxies:');
 L.push(block(S.directProxies, 2));
 L.push('');
@@ -185,7 +193,7 @@ if (cfg.tun) {
   L.push(block(cfg.tun, 2));
   L.push('');
 }
-L.push('# --- DNS：国外域名只经代理用 DoH 解析，国内域名交给国内 DNS ---');
+L.push('# --- DNS：国外域名走国外 DoH，国内域名与节点域名交给国内 DNS ---');
 L.push('#  机场必须用私有 DNS 才能解析节点域名时，把它填进 proxy-server-nameserver');
 L.push('dns:');
 L.push(block(cfg.dns, 2));
