@@ -1,0 +1,51 @@
+name: build
+
+on:
+  push:
+    paths:
+      - 'Script/override.js'
+      - 'tools/gen-config.js'
+      - 'test/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 脚本自检
+        run: node test/run.js
+
+      - name: 生成配置文件版
+        run: node tools/gen-config.js
+
+      - name: 用 mihomo 内核校验两份产物
+        run: |
+          ver=$(curl -sL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep -oP '"tag_name": "\K[^"]+')
+          echo "mihomo $ver"
+          curl -sL -o mihomo.gz "https://github.com/MetaCubeX/mihomo/releases/download/${ver}/mihomo-linux-amd64-${ver}.gz"
+          gzip -d mihomo.gz && chmod +x mihomo
+          mkdir -p check
+          node test/emit.js "$PWD/check/gen.yaml"
+          sed "s|url: '' # ← 订阅链接填这里|url: 'https://example.com/sub'|" Config/config.yaml > check/file.yaml
+          ./mihomo -t -d "$PWD/check" -f "$PWD/check/gen.yaml"
+          ./mihomo -t -d "$PWD/check" -f "$PWD/check/file.yaml"
+          rm -rf check mihomo
+
+      - name: 同步 Config/config.yaml
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Config/config.yaml
+          git diff --staged --quiet && echo '无变化' && exit 0
+          git commit -m 'chore: 从覆写脚本同步 Config/config.yaml'
+          git push
