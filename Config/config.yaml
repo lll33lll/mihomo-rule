@@ -1,0 +1,895 @@
+# ==================================================================
+#  mihomo 分流配置（配置文件版）
+#  由 tools/gen-config.js 从 Script/override.js 生成，不要直接改这里，
+#  改完脚本重新跑一次生成即可，两份产物的规则永远一致。
+#
+#  用之前只要做一件事：把机场订阅链接填进下面 proxy-providers 的 url。
+#  想改策略组 / 地区 / 开关，建议直接用覆写脚本版，功能更全。
+# ==================================================================
+
+# --- 机场订阅：url 填在单引号里，可复制整段来添加第二、第三个机场 ---
+proxy-providers:
+  机场一:
+    type: http
+    url: '' # ← 订阅链接填这里
+    interval: 86400
+    proxy: DIRECT # 更新订阅走直连，避免节点全挂时更不了
+    path: ./providers/sub1.yaml
+    exclude-type: 'direct|reject|rematch'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b' # 过滤机场塞的广告 / 到期提示假节点
+    health-check: { enable: true, url: https://cp.cloudflare.com/generate_204, interval: 600, lazy: true }
+    override: { additional-prefix: 'A | ' } # 多机场时防止节点重名
+
+#  机场二:
+#    type: http
+#    url: ''
+#    interval: 86400
+#    proxy: DIRECT
+#    path: ./providers/sub2.yaml
+#    exclude-type: 'direct|reject|rematch'
+#    health-check: { enable: true, url: https://cp.cloudflare.com/generate_204, interval: 600, lazy: true }
+#    override: { additional-prefix: 'B | ' }
+
+# --- 直连节点，供「直连」组切换 IP 栈 ---
+proxies:
+  - name: 直连 · 双栈
+    type: direct
+  - name: 直连 · IPv4优先
+    type: direct
+    ip-version: ipv4-prefer
+  - name: 直连 · IPv6优先
+    type: direct
+    ip-version: ipv6-prefer
+  - name: 直连 · 仅IPv4
+    type: direct
+    ip-version: ipv4
+
+# --- 基础设置 ---
+mixed-port: 7890
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+ipv6: true
+unified-delay: true
+tcp-concurrent: true
+keep-alive-interval: 30
+find-process-mode: strict
+external-controller: '127.0.0.1:9090'
+external-ui: ui
+external-ui-url: 'https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip'
+
+profile: { store-selected: true, store-fake-ip: true }
+
+ntp: { enable: true, write-to-system: false, server: ntp.aliyun.com, port: 123, interval: 60 }
+
+# --- 域名嗅探：修正走 IP 直连时拿不到域名的连接 ---
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: false
+  sniff:
+    HTTP: { ports: [80, 8080-8880], override-destination: true }
+    TLS: { ports: [443, 8443] }
+    QUIC: { ports: [443, 8443] }
+  skip-domain: [+.push.apple.com, +.apple.com, Mijia Cloud, dlg.io.mi.com]
+
+# --- TUN：手机客户端与路由器透明代理场景可把 enable 改成 false ---
+tun:
+  enable: true
+  stack: mixed
+  auto-route: true
+  strict-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+  dns-hijack: ['any:53', 'tcp://any:53']
+  mtu: 1500
+
+# --- DNS：国外域名只经代理用 DoH 解析，国内域名交给国内 DNS，无泄露 ---
+#  机场用私有 DNS 才能解析节点域名时，把它填进 proxy-server-nameserver
+dns:
+  enable: true
+  ipv6: true
+  use-hosts: true
+  use-system-hosts: true
+  cache-algorithm: arc
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/15
+  fake-ip-filter: ['rule-set:private', 'rule-set:fakeip_filter', 'rule-set:geolocation-cn', +.lan, +.local]
+  default-nameserver: [223.5.5.5, 119.29.29.29]
+  proxy-server-nameserver: ['https://223.5.5.5/dns-query#DIRECT', 'https://1.12.12.12/dns-query#DIRECT']
+  nameserver: ['https://cloudflare-dns.com/dns-query#默认代理', 'https://dns.google/dns-query#默认代理']
+  nameserver-policy:
+    'rule-set:cn_site,private': [223.5.5.5, 119.29.29.29]
+    +.jsdelivr.net: [223.5.5.5, 119.29.29.29]
+  direct-nameserver: [system, 223.5.5.5, 119.29.29.29]
+
+hosts:
+  cloudflare-dns.com: [1.1.1.1, 1.0.0.1]
+  dns.google: [8.8.8.8, 8.8.4.4]
+  services.googleapis.cn: services.googleapis.com
+  +.mcdn.bilivideo.com: [0.0.0.0]
+  +.mcdn.bilivideo.cn: [0.0.0.0]
+  +.szbdyd.com: [0.0.0.0]
+
+# --- 规则集：mrs 二进制格式，按需下载，内存占用远低于 geodata ---
+rule-providers:
+  private:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/private.mrs'
+    path: ./ruleset/private.mrs
+  private_ip:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: ipcidr
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geoip/private.mrs'
+    path: ./ruleset/ip_private.mrs
+  cn_site:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/cn.mrs'
+    path: ./ruleset/cn.mrs
+  cn_ip:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: ipcidr
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geoip/cn.mrs'
+    path: ./ruleset/ip_cn.mrs
+  geolocation-cn:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/geolocation-cn.mrs'
+    path: ./ruleset/geolocation-cn.mrs
+  'geolocation-!cn':
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/geolocation-!cn.mrs'
+    path: './ruleset/geolocation-!cn.mrs'
+  fakeip_filter:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/fakeip-filter.mrs'
+    path: ./ruleset/fakeip-filter.mrs
+  games_cn:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/category-games@cn.mrs'
+    path: './ruleset/category-games@cn.mrs'
+  epicgames:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/epicgames.mrs'
+    path: ./ruleset/epicgames.mrs
+  nvidia_cn:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/nvidia@cn.mrs'
+    path: './ruleset/nvidia@cn.mrs'
+  apple_cn:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/apple@cn.mrs'
+    path: './ruleset/apple@cn.mrs'
+  microsoft_cn:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/microsoft@cn.mrs'
+    path: './ruleset/microsoft@cn.mrs'
+  googlefcm:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/googlefcm.mrs'
+    path: ./ruleset/googlefcm.mrs
+  youtube:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/youtube.mrs'
+    path: ./ruleset/youtube.mrs
+  ai:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/category-ai-!cn.mrs'
+    path: './ruleset/category-ai-!cn.mrs'
+  github:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/github.mrs'
+    path: ./ruleset/github.mrs
+  telegram:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/telegram.mrs'
+    path: ./ruleset/telegram.mrs
+  telegram_ip:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: ipcidr
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geoip/telegram.mrs'
+    path: ./ruleset/ip_telegram.mrs
+  twitter:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/twitter.mrs'
+    path: ./ruleset/twitter.mrs
+  twitter_ip:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: ipcidr
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geoip/twitter.mrs'
+    path: ./ruleset/ip_twitter.mrs
+  instagram:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/instagram.mrs'
+    path: ./ruleset/instagram.mrs
+  tiktok:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/tiktok.mrs'
+    path: ./ruleset/tiktok.mrs
+  netflix:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/netflix.mrs'
+    path: ./ruleset/netflix.mrs
+  netflix_ip:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: ipcidr
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geoip/netflix.mrs'
+    path: ./ruleset/ip_netflix.mrs
+  disney:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/disney.mrs'
+    path: ./ruleset/disney.mrs
+  hbo:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/hbo.mrs'
+    path: ./ruleset/hbo.mrs
+  twitch:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/twitch.mrs'
+    path: ./ruleset/twitch.mrs
+  primevideo:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/primevideo.mrs'
+    path: ./ruleset/primevideo.mrs
+  hulu:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/hulu.mrs'
+    path: ./ruleset/hulu.mrs
+  abema:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/abema.mrs'
+    path: ./ruleset/abema.mrs
+  bahamut:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/bahamut.mrs'
+    path: ./ruleset/bahamut.mrs
+  niconico:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/niconico.mrs'
+    path: ./ruleset/niconico.mrs
+  spotify:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/spotify.mrs'
+    path: ./ruleset/spotify.mrs
+  emby:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/category-emby.mrs'
+    path: ./ruleset/category-emby.mrs
+  pikpak:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/pikpak.mrs'
+    path: ./ruleset/pikpak.mrs
+  steam:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/steam.mrs'
+    path: ./ruleset/steam.mrs
+  steam_asn:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: ipcidr
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/asn/AS32590.mrs'
+    path: ./ruleset/asn_AS32590.mrs
+  crypto:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/category-cryptocurrency.mrs'
+    path: ./ruleset/category-cryptocurrency.mrs
+  ehentai:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/ehentai.mrs'
+    path: ./ruleset/ehentai.mrs
+  google:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/google.mrs'
+    path: ./ruleset/google.mrs
+  google_ip:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: ipcidr
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geoip/google.mrs'
+    path: ./ruleset/ip_google.mrs
+  microsoft:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/microsoft.mrs'
+    path: ./ruleset/microsoft.mrs
+  onedrive:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/onedrive.mrs'
+    path: ./ruleset/onedrive.mrs
+  apple:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/apple.mrs'
+    path: ./ruleset/apple.mrs
+
+# --- 策略组 ---
+proxy-groups:
+  - name: 默认代理
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [香港, 日本, 美国, 新加坡, 其他节点, 手动选择, 自动选择, 负载均衡]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Proxy.png'
+  - name: 手动选择
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    include-all: true
+    exclude-type: DIRECT
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Static.png'
+  - name: 自动选择
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: url-test
+    tolerance: 50
+    exclude-type: DIRECT
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
+    include-all: true
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+  - name: 负载均衡
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: load-balance
+    strategy: sticky-sessions
+    exclude-type: DIRECT
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Round_Robin.png'
+    include-all: true
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+  - name: FCM
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [直连, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Play_Store.png'
+  - name: YouTube
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png'
+  - name: AI
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [美国, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png'
+  - name: GitHub
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/GitHub.png'
+  - name: Telegram
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png'
+  - name: Twitter
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Twitter.png'
+  - name: Instagram
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Instagram.png'
+  - name: TikTok
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [日本, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png'
+  - name: Netflix
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Netflix.png'
+  - name: Disney+
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Disney+.png'
+  - name: 国际流媒体
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Streaming.png'
+  - name: Spotify
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Spotify.png'
+  - name: Emby
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Emby.png'
+  - name: PikPak
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/PikPak.png'
+  - name: Steam
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Steam.png'
+  - name: Crypto
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [日本, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cryptocurrency.png'
+  - name: EHentai
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [美国, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Pornhub.png'
+  - name: Google
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Search.png'
+  - name: Microsoft
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Microsoft.png'
+  - name: Apple
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [直连, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png'
+  - name: 漏网之鱼
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [默认代理, 直连, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png'
+  - name: 直连
+    url: 'https://connectivitycheck.platform.hicloud.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    proxies: [直连 · 双栈, 直连 · IPv4优先, 直连 · IPv6优先, 直连 · 仅IPv4]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/China_Map.png'
+  - name: 香港 · 自动
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: url-test
+    tolerance: 50
+    exclude-type: DIRECT
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
+    empty-fallback: REJECT
+    include-all: true
+    filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+  - name: 香港
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    empty-fallback: REJECT
+    include-all: true
+    filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    proxies: [香港 · 自动]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png'
+  - name: 日本 · 自动
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: url-test
+    tolerance: 50
+    exclude-type: DIRECT
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
+    empty-fallback: REJECT
+    include-all: true
+    filter: '🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+  - name: 日本
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    empty-fallback: REJECT
+    include-all: true
+    filter: '🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    proxies: [日本 · 自动]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png'
+  - name: 美国 · 自动
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: url-test
+    tolerance: 50
+    exclude-type: DIRECT
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
+    empty-fallback: REJECT
+    include-all: true
+    filter: '🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+  - name: 美国
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    empty-fallback: REJECT
+    include-all: true
+    filter: '🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    proxies: [美国 · 自动]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png'
+  - name: 新加坡 · 自动
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: url-test
+    tolerance: 50
+    exclude-type: DIRECT
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
+    empty-fallback: REJECT
+    include-all: true
+    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+  - name: 新加坡
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    empty-fallback: REJECT
+    include-all: true
+    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    proxies: [新加坡 · 自动]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png'
+  - name: 其他节点 · 自动
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: url-test
+    tolerance: 50
+    exclude-type: DIRECT
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
+    empty-fallback: REJECT
+    include-all: true
+    exclude-filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+  - name: 其他节点
+    url: 'https://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 3000
+    lazy: true
+    max-failed-times: 3
+    expected-status: '204'
+    type: select
+    empty-fallback: REJECT
+    include-all: true
+    exclude-type: DIRECT
+    exclude-filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    proxies: [其他节点 · 自动]
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/World_Map.png'
+
+# --- 规则：从上往下匹配，命中即停 ---
+rules:
+  - 'RULE-SET,private,直连'
+  - 'RULE-SET,games_cn,直连'
+  - 'RULE-SET,epicgames,直连'
+  - 'RULE-SET,nvidia_cn,直连'
+  - 'RULE-SET,apple_cn,直连'
+  - 'RULE-SET,microsoft_cn,直连'
+  - 'AND,((NETWORK,UDP),(DST-PORT,443),(NOT,((OR,((RULE-SET,cn_site),(RULE-SET,cn_ip,no-resolve)))))),REJECT'
+  - 'RULE-SET,googlefcm,FCM'
+  - 'RULE-SET,youtube,YouTube'
+  - 'RULE-SET,ai,AI'
+  - 'RULE-SET,github,GitHub'
+  - 'RULE-SET,telegram,Telegram'
+  - 'RULE-SET,telegram_ip,Telegram,no-resolve'
+  - 'RULE-SET,twitter,Twitter'
+  - 'RULE-SET,twitter_ip,Twitter,no-resolve'
+  - 'RULE-SET,instagram,Instagram'
+  - 'RULE-SET,tiktok,TikTok'
+  - 'RULE-SET,netflix,Netflix'
+  - 'RULE-SET,netflix_ip,Netflix,no-resolve'
+  - 'RULE-SET,disney,Disney+'
+  - 'RULE-SET,hbo,国际流媒体'
+  - 'RULE-SET,twitch,国际流媒体'
+  - 'RULE-SET,primevideo,国际流媒体'
+  - 'RULE-SET,hulu,国际流媒体'
+  - 'RULE-SET,abema,国际流媒体'
+  - 'RULE-SET,bahamut,国际流媒体'
+  - 'RULE-SET,niconico,国际流媒体'
+  - 'RULE-SET,spotify,Spotify'
+  - 'RULE-SET,emby,Emby'
+  - 'DOMAIN-KEYWORD,emby,Emby'
+  - 'DOMAIN-SUFFIX,mb3admin.com,Emby'
+  - 'PROCESS-NAME,com.mb.android,Emby'
+  - 'PROCESS-NAME,tv.emby.embyatv,Emby'
+  - 'PROCESS-NAME,com.hush.yamby,Emby'
+  - 'PROCESS-NAME,com.jellycine.app,Emby'
+  - 'PROCESS-NAME,com.mountains.hills,Emby'
+  - 'PROCESS-NAME,Emby.exe,Emby'
+  - 'RULE-SET,pikpak,PikPak'
+  - 'RULE-SET,steam,Steam'
+  - 'RULE-SET,steam_asn,Steam,no-resolve'
+  - 'RULE-SET,crypto,Crypto'
+  - 'RULE-SET,ehentai,EHentai'
+  - 'RULE-SET,google,Google'
+  - 'RULE-SET,google_ip,Google,no-resolve'
+  - 'RULE-SET,onedrive,Microsoft'
+  - 'RULE-SET,microsoft,Microsoft'
+  - 'RULE-SET,apple,Apple'
+  - 'RULE-SET,geolocation-!cn,默认代理'
+  - 'RULE-SET,geolocation-cn,直连'
+  - 'RULE-SET,cn_ip,直连'
+  - 'RULE-SET,private_ip,直连'
+  - 'MATCH,漏网之鱼'
