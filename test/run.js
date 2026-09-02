@@ -160,18 +160,20 @@ t('dns 里引用的 rule-set 都已定义', () => {
   const defined = new Set(Object.keys(cfg['rule-providers']));
   const refs = [].concat(cfg.dns['fake-ip-filter'], Object.keys(cfg.dns['nameserver-policy']));
   for (const item of refs) {
-    for (const seg of String(item).split(',')) {
-      if (seg.indexOf('rule-set:') !== 0) continue;
-      ok(defined.has(seg.slice(9)), `dns 引用了未定义的规则集 ${seg}`);
-    }
+    const str = String(item);
+    if (str.indexOf('rule-set:') !== 0) continue;
+    for (const key of str.slice(9).split(',')) ok(defined.has(key), `dns 引用了未定义的规则集 ${key}`);
   }
 });
 t('没有定义了却没人用的规则集', () => {
   const used = new Set();
   for (const r of cfg.rules) for (const one of r.match(/RULE-SET,([^,)]+)/g) || []) used.add(one.split(',')[1]);
   const dnsRefs = [].concat(cfg.dns['fake-ip-filter'], Object.keys(cfg.dns['nameserver-policy']));
-  for (const item of dnsRefs)
-    for (const seg of String(item).split(',')) if (seg.indexOf('rule-set:') === 0) used.add(seg.slice(9));
+  for (const item of dnsRefs) {
+    const str = String(item);
+    if (str.indexOf('rule-set:') !== 0) continue;
+    for (const key of str.slice(9).split(',')) used.add(key);
+  }
   const unused = Object.keys(cfg['rule-providers']).filter((k) => !used.has(k));
   ok(unused.length === 0, `未使用：${unused.join(', ')}`);
 });
@@ -199,8 +201,14 @@ t('国外 DoH 域名在 hosts 里被固定，避免解析死循环', () => {
   ok(!!cfg.hosts['cloudflare-dns.com'], '缺 cloudflare-dns.com');
   ok(!!cfg.hosts['dns.google'], '缺 dns.google');
 });
-t('节点域名用国内 DoH 解析且强制直连', () => {
-  for (const n of cfg.dns['proxy-server-nameserver']) ok(n.indexOf('#DIRECT') > 0, `${n} 未强制直连`);
+t('节点域名默认用明文国内 DNS 解析（DoH 容易让节点全部超时）', () => {
+  const ns = cfg.dns['proxy-server-nameserver'];
+  ok(ns.indexOf('223.5.5.5') >= 0, `实际 ${ns.join(',')}`);
+  ok(!ns.some((n) => n.indexOf('https://') === 0), '默认不该用 DoH');
+});
+t('打开加密开关后节点域名走 DoH 且强制直连', () => {
+  const c = load((code) => code.replace('节点域名用加密DNS: false', '节点域名用加密DNS: true')).main(fixture());
+  for (const n of c.dns['proxy-server-nameserver']) ok(n.indexOf('#DIRECT') > 0, `${n} 未强制直连`);
 });
 t('国内域名走国内 DNS', () => {
   const pol = cfg.dns['nameserver-policy'];
@@ -208,22 +216,32 @@ t('国内域名走国内 DNS', () => {
   ok(!!key, '缺少国内域名策略');
   ok(pol[key].indexOf('223.5.5.5') >= 0);
 });
-t('fake-ip-filter 覆盖内网与国内域名', () => {
+t('fake-ip-filter 覆盖内网、国内域名与国内 App', () => {
   const f = cfg.dns['fake-ip-filter'].join('|');
-  ok(f.indexOf('rule-set:private') >= 0 && f.indexOf('rule-set:geolocation-cn') >= 0);
+  for (const k of ['geolocation-cn', 'private', 'douyin', 'bytedance', 'cdn_cn', 'bilibili']) {
+    ok(f.indexOf(k) >= 0, `缺 ${k}`);
+  }
+  ok(f.indexOf('+.lan') >= 0);
 });
 
 console.log('\n  ▸ 机场私有 DNS / hosts 兼容');
-t('hosts 能定死的节点域名被写成 IP', () => {
+t('默认不改写节点 server，改把机场 hosts 条目保留下来解析', () => {
   const hk = cfg.proxies.find((p) => p.name === '🇭🇰 香港 01');
-  ok(hk.server === '5.5.5.5', `实际 ${hk.server}`);
-  const jp = cfg.proxies.find((p) => p.name === '🇯🇵 JP 东京 IEPL');
-  ok(jp.server === '6.6.6.6', `通配 hosts 未生效，实际 ${jp.server}`);
+  ok(hk.server === 'hk1.airport.example', `server 被改成了 ${hk.server}`);
+  ok(cfg.hosts['hk1.airport.example'] !== undefined, '机场 hosts 条目没有保留');
+  ok(cfg.hosts['+.airport.example'] !== undefined, '通配 hosts 条目没有保留');
 });
-t('写死 IP 后 TLS 节点自动补 servername', () => {
-  const sg = cfg.proxies.find((p) => p.name === '🇸🇬 Singapore-01');
-  ok(sg.server === '6.6.6.6', `实际 ${sg.server}`);
-  ok(sg.servername === 'sg1.airport.example', `SNI 丢失：${sg.servername}`);
+t('打开写死IP 后节点 server 变成 IP，且原域名留给 SNI', () => {
+  const c = load((code) => code.replace('写死节点IP: false', '写死节点IP: true')).main(fixture());
+  const hk = c.proxies.find((p) => p.name === '🇭🇰 香港 01');
+  ok(hk.server === '5.5.5.5', `实际 ${hk.server}`);
+  const jp = c.proxies.find((p) => p.name === '🇯🇵 JP 东京 IEPL');
+  ok(jp.server === '6.6.6.6', `通配 hosts 未生效，实际 ${jp.server}`);
+  const sg = c.proxies.find((p) => p.name === '🇸🇬 Singapore-01');
+  ok(sg.servername === 'sg1.airport.example', `vless 的 SNI 丢了：${sg.servername}`);
+  const tj = c.proxies.find((p) => p.name === '🇭🇰 香港 02 x2');
+  ok(tj.server === '6.6.6.6', `实际 ${tj.server}`);
+  ok(tj.sni === 'hk2.airport.example', `trojan 该用 sni 字段留域名，实际 ${tj.sni}`);
 });
 t('已经是 IP 的节点不动', () => {
   const us = cfg.proxies.find((p) => p.name.indexOf('洛杉矶') >= 0);
@@ -239,7 +257,7 @@ t('公共 DNS 识别正确', () => {
   ok(api.isPublicDns('system'));
   ok(!api.isPublicDns('https://doh.airport.example/dns-query'));
 });
-t('hosts 全都无法定死时保留私有 DNS 策略（只作用于节点域名）', () => {
+t('机场只给私有 DNS 时，策略只作用于节点域名', () => {
   const input = fixture();
   delete input.hosts;
   const c = api.main(input);
@@ -250,6 +268,78 @@ t('hosts 全都无法定死时保留私有 DNS 策略（只作用于节点域名
   ok(pol['hk1.airport.example'][0] === 'https://doh.airport.example/dns-query');
   for (const k of keys) ok(k.indexOf('airport.example') >= 0, `策略作用到了无关域名 ${k}`);
 });
+
+console.log('\n  ▸ 回归：节点全部超时 / 国内流量误走代理');
+t('测速地址不是 https、且域名交给国内 DNS（否则测速与代理互锁）', () => {
+  const groups = cfg['proxy-groups'].filter((g) => g.url);
+  ok(groups.length > 0);
+  const keys = Object.keys(cfg.dns['nameserver-policy']).join('|');
+  for (const g of groups) {
+    const host = g.url.replace(/^https?:\/\//, '').split('/')[0];
+    ok(keys.indexOf(host) >= 0, `${g.name} 的测速域名 ${host} 没有指定国内 DNS`);
+    ok(g.url.indexOf('http://') === 0, `${g.name} 的测速地址还是 https`);
+  }
+});
+t('测速域名的 DNS 策略指向国内明文 DNS', () => {
+  const pol = cfg.dns['nameserver-policy'];
+  const key = Object.keys(pol).find((k) => k.indexOf('cp.cloudflare.com') >= 0);
+  ok(!!key, '缺少测速域名策略');
+  ok(pol[key].indexOf('223.5.5.5') >= 0);
+});
+t('国外 DNS 绑定的策略组真实存在', () => {
+  const names = new Set(cfg['proxy-groups'].map((g) => g.name));
+  for (const n of cfg.dns.nameserver) {
+    const at = n.indexOf('#');
+    if (at < 0) continue;
+    const target = n.slice(at + 1);
+    ok(names.has(target) || target === 'DIRECT', `DNS 绑定了不存在的组 ${target}`);
+  }
+});
+t('抖音、字节、国内 CDN、B 站都有直连规则', () => {
+  for (const k of ['douyin', 'bytedance', 'cdn_cn', 'bilibili']) {
+    ok(cfg.rules.indexOf(`RULE-SET,${k},直连`) >= 0, `缺 ${k} 直连规则`);
+  }
+});
+t('字节海外域名走 TikTok，且排在 bytedance 直连之前', () => {
+  const notCn = cfg.rules.indexOf('RULE-SET,bytedance_notcn,TikTok');
+  const bd = cfg.rules.indexOf('RULE-SET,bytedance,直连');
+  const tk = cfg.rules.indexOf('RULE-SET,tiktok,TikTok');
+  ok(notCn > 0, '缺少字节海外域名规则');
+  ok(tk >= 0 && tk < notCn, 'tiktok 规则应排在最前');
+  ok(notCn < bd, '顺序反了：bytedance 直连会把 TikTok 一起吃掉');
+});
+t('国内直连规则排在兜底之前', () => {
+  const last = cfg.rules.indexOf('RULE-SET,geolocation-!cn,默认代理');
+  for (const k of ['douyin', 'bytedance', 'cdn_cn', 'bilibili']) {
+    ok(cfg.rules.indexOf(`RULE-SET,${k},直连`) < last, `${k} 排在兜底之后了`);
+  }
+});
+t('默认不产生 QUIC 拦截规则', () => {
+  ok(!cfg.rules.some((r) => r.indexOf('NETWORK,UDP') >= 0), 'QUIC 规则默认应关闭');
+});
+t('打开 QUIC 屏蔽时国内 App 在放行名单里', () => {
+  const c = load((code) => code.replace('屏蔽国外QUIC: false', '屏蔽国外QUIC: true')).main(fixture());
+  const r = c.rules.find((x) => x.indexOf('NETWORK,UDP') >= 0);
+  ok(!!r, '没生成 QUIC 规则');
+  for (const k of ['cn_site', 'douyin', 'bytedance', 'cdn_cn', 'bilibili', 'cn_ip']) {
+    ok(r.indexOf(`RULE-SET,${k}`) >= 0, `QUIC 放行名单缺 ${k}`);
+  }
+});
+t('订阅节点补上 udp: true', () => {
+  const subs = cfg.proxies.filter((p) => p.type !== 'direct');
+  ok(subs.length > 0 && subs.every((p) => p.udp === true), '有节点没有 udp: true');
+});
+t('故障转移组存在且被默认代理引用', () => {
+  const g = cfg['proxy-groups'].find((x) => x.name === '故障转移');
+  ok(!!g, '缺少故障转移组');
+  ok(g.type === 'fallback', `类型应为 fallback，实际 ${g.type}`);
+  ok(cfg['proxy-groups'].find((x) => x.name === '默认代理').proxies.indexOf('故障转移') >= 0);
+});
+t('sniffer 跳过微信 / 腾讯图片 / 向日葵等易出问题的域名', () => {
+  const sk = cfg.sniffer['skip-domain'].join('|');
+  for (const d of ['+.wechat.com', '+.qq.com', '+.qpic.cn', '+.oray.com']) ok(sk.indexOf(d) >= 0, `缺 ${d}`);
+});
+t('TUN 用 gvisor 栈（兼容性最好）', () => ok(cfg.tun.stack === 'gvisor', `实际 ${cfg.tun.stack}`));
 
 console.log('\n  ▸ 开关');
 t('关掉某个分流组后，组和它的规则一起消失', () => {
@@ -266,10 +356,6 @@ t('关掉进程匹配后不产生 PROCESS-NAME 规则', () => {
   const c = load((code) => code.replace('进程匹配: true', '进程匹配: false')).main(fixture());
   ok(!c.rules.some((r) => r.indexOf('PROCESS-NAME') === 0), '进程规则仍在');
   ok(c['find-process-mode'] === 'off');
-});
-t('关掉 QUIC 屏蔽后规则消失', () => {
-  const c = load((code) => code.replace('屏蔽国外QUIC: true', '屏蔽国外QUIC: false')).main(fixture());
-  ok(!c.rules.some((r) => r.indexOf('NETWORK,UDP') >= 0));
 });
 t('开启平铺后分流组能直接点到单个节点', () => {
   const c = load((code) => code.replace('分流组平铺全部节点: false', '分流组平铺全部节点: true')).main(fixture());
