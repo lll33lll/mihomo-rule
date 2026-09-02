@@ -1,13 +1,13 @@
 # ==================================================================
 #  mihomo 分流配置（配置文件版）
-#  由 tools/gen-config.js 从 Script/override.js 生成，不要直接改这里，
-#  改完脚本重新跑一次生成即可，两份产物的规则永远一致。
+#  由 tools/gen-config.js 从 Script/override.js 生成，别直接改这里；
+#  改完脚本重跑一次生成即可，两份产物的规则永远一致。
 #
 #  用之前只要做一件事：把机场订阅链接填进下面 proxy-providers 的 url。
-#  想改策略组 / 地区 / 开关，建议直接用覆写脚本版，功能更全。
+#  想改策略组 / 地区 / 开关，用覆写脚本版，功能更全。
 # ==================================================================
 
-# --- 机场订阅：url 填在单引号里，可复制整段来添加第二、第三个机场 ---
+# --- 机场订阅：url 填在单引号里，可整段复制来添加第二、第三个机场 ---
 proxy-providers:
   机场一:
     type: http
@@ -17,8 +17,8 @@ proxy-providers:
     path: ./providers/sub1.yaml
     exclude-type: 'direct|reject|rematch'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b' # 过滤机场塞的广告 / 到期提示假节点
-    health-check: { enable: true, url: https://cp.cloudflare.com/generate_204, interval: 600, lazy: true }
-    override: { additional-prefix: 'A | ' } # 多机场时防止节点重名
+    health-check: { enable: true, url: http://cp.cloudflare.com/generate_204, interval: 600, lazy: true }
+    override: { udp: true, additional-prefix: 'A | ' } # udp 补上，多机场时防重名
 
 #  机场二:
 #    type: http
@@ -27,8 +27,8 @@ proxy-providers:
 #    proxy: DIRECT
 #    path: ./providers/sub2.yaml
 #    exclude-type: 'direct|reject|rematch'
-#    health-check: { enable: true, url: https://cp.cloudflare.com/generate_204, interval: 600, lazy: true }
-#    override: { additional-prefix: 'B | ' }
+#    health-check: { enable: true, url: http://cp.cloudflare.com/generate_204, interval: 600, lazy: true }
+#    override: { udp: true, additional-prefix: 'B | ' }
 
 # --- 直连节点，供「直连」组切换 IP 栈 ---
 proxies:
@@ -53,7 +53,9 @@ log-level: info
 ipv6: true
 unified-delay: true
 tcp-concurrent: true
+keep-alive-idle: 600
 keep-alive-interval: 30
+global-ua: clash.meta
 find-process-mode: strict
 external-controller: '127.0.0.1:9090'
 external-ui: ui
@@ -66,19 +68,27 @@ ntp: { enable: true, write-to-system: false, server: ntp.aliyun.com, port: 123, 
 # --- 域名嗅探：修正走 IP 直连时拿不到域名的连接 ---
 sniffer:
   enable: true
-  force-dns-mapping: true
-  parse-pure-ip: true
   override-destination: false
   sniff:
     HTTP: { ports: [80, 8080-8880], override-destination: true }
     TLS: { ports: [443, 8443] }
     QUIC: { ports: [443, 8443] }
-  skip-domain: [+.push.apple.com, +.apple.com, Mijia Cloud, dlg.io.mi.com]
+  skip-domain:
+    - +.push.apple.com
+    - +.apple.com
+    - +.wechat.com
+    - +.wechatapp.com
+    - +.qq.com
+    - +.qpic.cn
+    - +.oray.com
+    - +.sunlogin.net
+    - Mijia Cloud
+    - dlg.io.mi.com
 
-# --- TUN：手机客户端与路由器透明代理场景可把 enable 改成 false ---
+# --- TUN：路由器 / OpenWrt 透明代理场景把 enable 改成 false ---
 tun:
   enable: true
-  stack: mixed
+  stack: gvisor
   auto-route: true
   strict-route: true
   auto-redirect: true
@@ -86,8 +96,8 @@ tun:
   dns-hijack: ['any:53', 'tcp://any:53']
   mtu: 1500
 
-# --- DNS：国外域名只经代理用 DoH 解析，国内域名交给国内 DNS，无泄露 ---
-#  机场用私有 DNS 才能解析节点域名时，把它填进 proxy-server-nameserver
+# --- DNS：国外域名只经代理用 DoH 解析，国内域名交给国内 DNS ---
+#  机场必须用私有 DNS 才能解析节点域名时，把它填进 proxy-server-nameserver
 dns:
   enable: true
   ipv6: true
@@ -96,12 +106,18 @@ dns:
   cache-algorithm: arc
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/15
-  fake-ip-filter: ['rule-set:private', 'rule-set:fakeip_filter', 'rule-set:geolocation-cn', +.lan, +.local]
+  fake-ip-filter:
+    - 'rule-set:fakeip_filter,geolocation-cn,private,games_cn,epicgames,nvidia_cn,apple_cn,microsoft_cn,douyin,bytedance,cdn_cn,bilibili'
+    - +.lan
+    - +.local
   default-nameserver: [223.5.5.5, 119.29.29.29]
-  proxy-server-nameserver: ['https://223.5.5.5/dns-query#DIRECT', 'https://1.12.12.12/dns-query#DIRECT']
+  proxy-server-nameserver: [223.5.5.5, 119.29.29.29]
   nameserver: ['https://cloudflare-dns.com/dns-query#默认代理', 'https://dns.google/dns-query#默认代理']
   nameserver-policy:
-    'rule-set:cn_site,private': [223.5.5.5, 119.29.29.29]
+    'rule-set:cn_site,private,games_cn,epicgames,nvidia_cn,apple_cn,microsoft_cn,douyin,bytedance,cdn_cn,bilibili':
+      - 223.5.5.5
+      - 119.29.29.29
+    'cp.cloudflare.com,connectivitycheck.platform.hicloud.com': [223.5.5.5, 119.29.29.29]
     +.jsdelivr.net: [223.5.5.5, 119.29.29.29]
   direct-nameserver: [system, 223.5.5.5, 119.29.29.29]
 
@@ -111,7 +127,6 @@ hosts:
   services.googleapis.cn: services.googleapis.com
   +.mcdn.bilivideo.com: [0.0.0.0]
   +.mcdn.bilivideo.cn: [0.0.0.0]
-  +.szbdyd.com: [0.0.0.0]
 
 # --- 规则集：mrs 二进制格式，按需下载，内存占用远低于 geodata ---
 rule-providers:
@@ -199,6 +214,41 @@ rule-providers:
     behavior: domain
     url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/microsoft@cn.mrs'
     path: './ruleset/microsoft@cn.mrs'
+  douyin:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/douyin.mrs'
+    path: ./ruleset/douyin.mrs
+  bytedance:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/bytedance.mrs'
+    path: ./ruleset/bytedance.mrs
+  bytedance_notcn:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/bytedance@!cn.mrs'
+    path: './ruleset/bytedance@!cn.mrs'
+  cdn_cn:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/category-cdn-cn.mrs'
+    path: ./ruleset/category-cdn-cn.mrs
+  bilibili:
+    type: http
+    format: mrs
+    interval: 86400
+    behavior: domain
+    url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/bilibili.mrs'
+    path: ./ruleset/bilibili.mrs
   googlefcm:
     type: http
     format: mrs
@@ -424,420 +474,456 @@ rule-providers:
     url: 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta/geo/geosite/apple.mrs'
     path: ./ruleset/apple.mrs
 
-# --- 策略组 ---
+# --- 策略组：地区组用正则过滤，匹配不到节点时回退 REJECT ---
 proxy-groups:
-  - name: 默认代理
-    url: 'https://cp.cloudflare.com/generate_204'
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [香港, 日本, 美国, 新加坡, 其他节点, 手动选择, 自动选择, 负载均衡]
+    name: GLOBAL
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Global.png'
+    proxies:
+      - 默认代理
+      - 手动选择
+      - 自动选择
+      - 负载均衡
+      - 故障转移
+      - FCM
+      - YouTube
+      - AI
+      - GitHub
+      - Telegram
+      - Twitter
+      - Instagram
+      - TikTok
+      - Netflix
+      - Disney+
+      - 国际流媒体
+      - Spotify
+      - Emby
+      - PikPak
+      - Steam
+      - Crypto
+      - EHentai
+      - Google
+      - Microsoft
+      - Apple
+      - 漏网之鱼
+      - 直连
+      - 香港 · 自动
+      - 香港
+      - 日本 · 自动
+      - 日本
+      - 美国 · 自动
+      - 美国
+      - 新加坡 · 自动
+      - 新加坡
+      - 其他节点 · 自动
+      - 其他节点
+  - url: 'http://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: select
+    name: 默认代理
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Proxy.png'
-  - name: 手动选择
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [香港, 日本, 美国, 新加坡, 其他节点, 手动选择, 自动选择, 负载均衡, 故障转移]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
+    name: 手动选择
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Static.png'
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Static.png'
-  - name: 自动选择
-    url: 'https://cp.cloudflare.com/generate_204'
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: url-test
     tolerance: 50
     exclude-type: DIRECT
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
+    hidden: false
+    name: 自动选择
     include-all: true
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-  - name: 负载均衡
-    url: 'https://cp.cloudflare.com/generate_204'
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: load-balance
     strategy: sticky-sessions
     exclude-type: DIRECT
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Round_Robin.png'
+    name: 负载均衡
     include-all: true
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-  - name: FCM
-    url: 'https://cp.cloudflare.com/generate_204'
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
+    type: fallback
+    name: 故障转移
+    exclude-type: DIRECT
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Bypass.png'
+    include-all: true
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+  - url: 'http://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
     type: select
-    proxies: [直连, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: FCM
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Play_Store.png'
-  - name: YouTube
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [直连, 默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: YouTube
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/YouTube.png'
-  - name: AI
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [美国, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 新加坡, 其他节点]
+    name: AI
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/ChatGPT.png'
-  - name: GitHub
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [美国, 默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: GitHub
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/GitHub.png'
-  - name: Telegram
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: Telegram
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Telegram.png'
-  - name: Twitter
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: Twitter
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Twitter.png'
-  - name: Instagram
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: Instagram
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Instagram.png'
-  - name: TikTok
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [日本, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 美国, 新加坡, 其他节点]
+    name: TikTok
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/TikTok.png'
-  - name: Netflix
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [日本, 默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: Netflix
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Netflix.png'
-  - name: Disney+
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: Disney+
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Disney+.png'
-  - name: 国际流媒体
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: 国际流媒体
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Streaming.png'
-  - name: Spotify
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    name: Spotify
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Spotify.png'
-  - name: Emby
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    name: Emby
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Emby.png'
-  - name: PikPak
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    name: PikPak
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/PikPak.png'
-  - name: Steam
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    name: Steam
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Steam.png'
-  - name: Crypto
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [日本, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 美国, 新加坡, 其他节点]
+    name: Crypto
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Cryptocurrency.png'
-  - name: EHentai
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [日本, 默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [美国, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 新加坡, 其他节点]
+    name: EHentai
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Pornhub.png'
-  - name: Google
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [美国, 默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: Google
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Google_Search.png'
-  - name: Microsoft
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+    name: Microsoft
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Microsoft.png'
-  - name: Apple
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点, 直连]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [直连, 默认代理, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: Apple
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Apple.png'
-  - name: 漏网之鱼
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [直连, 默认代理, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [默认代理, 直连, 手动选择, 自动选择, 负载均衡, 香港, 日本, 美国, 新加坡, 其他节点]
+    name: 漏网之鱼
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Final.png'
-  - name: 直连
-    url: 'https://connectivitycheck.platform.hicloud.com/generate_204'
+    proxies: [默认代理, 直连, 手动选择, 自动选择, 负载均衡, 故障转移, 香港, 日本, 美国, 新加坡, 其他节点]
+  - url: 'http://connectivitycheck.platform.hicloud.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    proxies: [直连 · 双栈, 直连 · IPv4优先, 直连 · IPv6优先, 直连 · 仅IPv4]
+    name: 直连
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/China_Map.png'
-  - name: 香港 · 自动
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [直连 · 双栈, 直连 · IPv4优先, 直连 · IPv6优先, 直连 · 仅IPv4]
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: url-test
     tolerance: 50
     exclude-type: DIRECT
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
-    empty-fallback: REJECT
+    hidden: true
+    name: 香港 · 自动
     include-all: true
     filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-  - name: 香港
-    url: 'https://cp.cloudflare.com/generate_204'
+    empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    empty-fallback: REJECT
-    include-all: true
-    filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong'
-    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-    proxies: [香港 · 自动]
+    name: 香港
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hong_Kong.png'
-  - name: 日本 · 自动
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [香港 · 自动]
+    hidden: false
+    include-all: true
+    exclude-type: DIRECT
+    filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: url-test
     tolerance: 50
     exclude-type: DIRECT
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
-    empty-fallback: REJECT
+    hidden: true
+    name: 日本 · 自动
     include-all: true
     filter: '🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-  - name: 日本
-    url: 'https://cp.cloudflare.com/generate_204'
+    empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    empty-fallback: REJECT
-    include-all: true
-    filter: '🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka'
-    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-    proxies: [日本 · 自动]
+    name: 日本
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Japan.png'
-  - name: 美国 · 自动
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [日本 · 自动]
+    hidden: false
+    include-all: true
+    exclude-type: DIRECT
+    filter: '🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: url-test
     tolerance: 50
     exclude-type: DIRECT
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
-    empty-fallback: REJECT
+    hidden: true
+    name: 美国 · 自动
     include-all: true
     filter: '🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-  - name: 美国
-    url: 'https://cp.cloudflare.com/generate_204'
+    empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    empty-fallback: REJECT
-    include-all: true
-    filter: '🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states'
-    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-    proxies: [美国 · 自动]
+    name: 美国
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/United_States.png'
-  - name: 新加坡 · 自动
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [美国 · 自动]
+    hidden: false
+    include-all: true
+    exclude-type: DIRECT
+    filter: '🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: url-test
     tolerance: 50
     exclude-type: DIRECT
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
-    empty-fallback: REJECT
+    hidden: true
+    name: 新加坡 · 自动
     include-all: true
     filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-  - name: 新加坡
-    url: 'https://cp.cloudflare.com/generate_204'
+    empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: select
-    empty-fallback: REJECT
-    include-all: true
-    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
-    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-    proxies: [新加坡 · 自动]
+    name: 新加坡
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Singapore.png'
-  - name: 其他节点 · 自动
-    url: 'https://cp.cloudflare.com/generate_204'
+    proxies: [新加坡 · 自动]
+    hidden: false
+    include-all: true
+    exclude-type: DIRECT
+    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
+    empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
     interval: 600
-    timeout: 3000
+    timeout: 5000
     lazy: true
-    max-failed-times: 3
-    expected-status: '204'
+    max-failed-times: 5
     type: url-test
     tolerance: 50
     exclude-type: DIRECT
     icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Auto.png'
-    empty-fallback: REJECT
+    hidden: true
+    name: 其他节点 · 自动
     include-all: true
     exclude-filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-  - name: 其他节点
-    url: 'https://cp.cloudflare.com/generate_204'
-    interval: 600
-    timeout: 3000
-    lazy: true
-    max-failed-times: 3
-    expected-status: '204'
-    type: select
     empty-fallback: REJECT
+  - url: 'http://cp.cloudflare.com/generate_204'
+    interval: 600
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: select
+    name: 其他节点
+    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/World_Map.png'
+    proxies: [其他节点 · 自动]
+    hidden: false
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '🇭🇰|香港|港區|港区|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇺🇸|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b'
-    proxies: [其他节点 · 自动]
-    icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/World_Map.png'
+    empty-fallback: REJECT
 
 # --- 规则：从上往下匹配，命中即停 ---
 rules:
@@ -847,7 +933,6 @@ rules:
   - 'RULE-SET,nvidia_cn,直连'
   - 'RULE-SET,apple_cn,直连'
   - 'RULE-SET,microsoft_cn,直连'
-  - 'AND,((NETWORK,UDP),(DST-PORT,443),(NOT,((OR,((RULE-SET,cn_site),(RULE-SET,cn_ip,no-resolve)))))),REJECT'
   - 'RULE-SET,googlefcm,FCM'
   - 'RULE-SET,youtube,YouTube'
   - 'RULE-SET,ai,AI'
@@ -858,6 +943,7 @@ rules:
   - 'RULE-SET,twitter_ip,Twitter,no-resolve'
   - 'RULE-SET,instagram,Instagram'
   - 'RULE-SET,tiktok,TikTok'
+  - 'RULE-SET,bytedance_notcn,TikTok'
   - 'RULE-SET,netflix,Netflix'
   - 'RULE-SET,netflix_ip,Netflix,no-resolve'
   - 'RULE-SET,disney,Disney+'
@@ -888,6 +974,10 @@ rules:
   - 'RULE-SET,onedrive,Microsoft'
   - 'RULE-SET,microsoft,Microsoft'
   - 'RULE-SET,apple,Apple'
+  - 'RULE-SET,douyin,直连'
+  - 'RULE-SET,bytedance,直连'
+  - 'RULE-SET,cdn_cn,直连'
+  - 'RULE-SET,bilibili,直连'
   - 'RULE-SET,geolocation-!cn,默认代理'
   - 'RULE-SET,geolocation-cn,直连'
   - 'RULE-SET,cn_ip,直连'
