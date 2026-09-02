@@ -7,20 +7,23 @@
  * 特性：
  *   1. 自动剔除机场塞进节点列表的广告 / 到期提示 / 官网入口等假节点
  *   2. 按节点名匹配地区，只为「真的有节点」的地区生成策略组
- *   3. 节点名自动补全国旗、折叠多余空格、去重
+ *   3. 节点名自动补全国旗、折叠多余空格、去重，并补上漏掉的 udp
  *   4. 规则集全部使用 mrs 二进制格式，按需加载，内存占用远低于 geodata
- *   5. DNS 采用 fake-ip + 国内外分流，国外域名只经代理用 DoH 解析，无泄露
- *   6. 自动兼容「机场使用私有 DNS / hosts 映射节点域名」的情况：
- *      能直接写死成 IP 的写进节点 server，剩下的降级为只对节点域名生效的
- *      proxy-server-nameserver-policy，不会污染其他域名的解析
- *   7. 所有策略组、开关都在下方「用户配置区」里，改完即生效
+ *   5. 国内的走国内、国外的走国外：抖音 / 字节 / B 站 / 国内 CDN 明确直连，
+ *      字节的海外域名（CapCut、musical.ly 等）跟 TikTok 一起走代理
+ *   6. DNS 采用 fake-ip + 国内外分流，国外域名只经代理用 DoH 解析；
+ *      测速地址与规则集 CDN 的解析固定走国内 DNS，避免「测速等代理、代理等测速」互锁
+ *   7. 兼容机场的私有 DNS / hosts 映射：默认保留 hosts 条目来解析节点域名，
+ *      不改 server 也就不会丢掉 TLS 要用的 SNI
+ *   8. 所有策略组、开关都在下方「用户配置区」里，改完即生效
  *
  * 用法：把本文件的 URL 或完整代码填进客户端的「覆写 / Override / 脚本」处即可。
  *       支持 mihomo 内核的客户端：Bettbox、FlClash、Clash Verge Rev、
  *       Mihomo Party、Clash Meta for Android 等。
  *
  * 致谢：规则集来自 appshubcc/bett-rules（上游 MetaCubeX/meta-rules-dat）；
- *       图标来自 Koolson/Qure。整体思路参考 AIsouler/MyClash 与 dahaha-365/YaNet。
+ *       图标来自 Koolson/Qure。思路参考 AIsouler/MyClash、Lanlan13-14/Rules
+ *       与 dahaha-365/YaNet。
  */
 
 // ==================================================================
@@ -33,6 +36,7 @@ const enableGroups = {
   手动选择: true, // 平铺全部节点，手动点
   自动选择: true, // 全部节点里自动选延迟最低的
   负载均衡: true, // 多节点轮流用，同一连接粘同一节点
+  故障转移: true, // 按顺序用第一个可用节点，当前节点挂了自动顺延
 
   // --- 分流组 ---
   AI: true, // ChatGPT / Claude / Gemini / Copilot 等
@@ -64,7 +68,10 @@ const options = {
   隐藏地区手动选择组: false, // 只想用自动选择时可设 true，界面更干净
   分流组平铺全部节点: false, // true = 每个分流组里都能直接点到单个节点（组会很长）
   过滤非地区节点: true, // 剔除名字里带广告/到期提示等信息的假节点
-  屏蔽国外QUIC: true, // 拦掉国外 UDP/443，强制 YouTube 等回落 TCP，避免 QUIC 拖慢
+  屏蔽国外QUIC: false, // 默认关：这条规则会顺带拦掉国内 App 走 QUIC 的图片/视频 CDN
+  节点域名用加密DNS: false, // 默认关（明文国内 DNS 解析节点域名，最不容易连不上）；开启更隐私但更容易解析失败
+  写死节点IP: false, // 默认关。开启后把机场 hosts 里的映射直接写进节点 server，某些机场需要
+  节点强制启用UDP: true, // 给订阅节点补 udp: true，修好 QUIC / 游戏 / 语音
   启用TUN: true, // 路由器 / OpenWrt 透明代理场景请设为 false
   启用IPv6: true, // 家里/手机没有 IPv6 出口时设为 false，可少一半无用的 AAAA 查询
   进程匹配: true, // 关闭可省电，但 Emby 等按进程分流的规则会失效（手机建议开）
@@ -135,12 +142,20 @@ const customProxies = [
 const RULES_BASE = 'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@meta';
 const ICON_BASE = 'https://fastly.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color';
 
-/** 国内 DNS：明文，只用于解析国内域名与 DoH 自身的域名 */
+/** 国内 DNS：明文，解析国内域名、节点域名与连通性检测域名 */
 const cnDns = ['223.5.5.5', '119.29.29.29'];
-/** 国内 DoH：解析节点域名用，强制直连，防止死循环 */
-const cnDoh = ['https://223.5.5.5/dns-query#DIRECT', 'https://1.12.12.12/dns-query#DIRECT'];
+/** 国内 DoH：更隐私，但首次连接慢、被干扰时会解析失败，所以只在开关打开时用 */
+const cnDoh = ['https://223.5.5.5/dns-query#DIRECT', 'https://doh.pub/dns-query#DIRECT'];
 /** 国外 DoH：走代理出去，国外域名的解析全部经此，避免 DNS 泄露 */
 const fgDoh = ['https://cloudflare-dns.com/dns-query#默认代理', 'https://dns.google/dns-query#默认代理'];
+
+/**
+ * 连通性检测地址。用 HTTP 省一次 TLS 握手；域名固定交给国内 DNS 解析。
+ * 这一点很关键：如果测速域名要靠「国外 DoH 经代理」来解析，就会变成
+ * 「测速等解析、解析等代理、代理等测速」的死循环，表现是所有节点都超时。
+ */
+const healthCheckUrl = 'http://cp.cloudflare.com/generate_204';
+const healthCheckDomains = ['cp.cloudflare.com', 'connectivitycheck.platform.hicloud.com'];
 
 const icon = (n) => `${ICON_BASE}/${n}.png`;
 
@@ -175,16 +190,31 @@ const baseProviders = {
   nvidia_cn: site('nvidia@cn'),
   apple_cn: site('apple@cn'),
   microsoft_cn: site('microsoft@cn'),
+  // 下面几个是「国内的走国内」的关键补充：
+  // geolocation-cn 里 byteimg.com 只收了 juejin/novel 几个子域，
+  // 抖音图集图片走的 p*-sign.byteimg.com 不在里面，会被兜底规则送去代理，
+  // 结果国内 CDN 拒绝海外 IP —— 视频能看、图集不显示就是这么来的。
+  douyin: site('douyin'),
+  bytedance: site('bytedance'),
+  bytedance_notcn: site('bytedance@!cn'),
+  cdn_cn: site('category-cdn-cn'),
+  bilibili: site('bilibili'),
 };
+
+/** 国内直连规则集：放在服务分流之前，不会和任何分流组抢域名 */
+const cnDirectEarly = ['private', 'games_cn', 'epicgames', 'nvidia_cn', 'apple_cn', 'microsoft_cn'];
+/** 国内直连规则集：必须放在服务分流之后，否则 bytedance 会把 TikTok 一起吃掉 */
+const cnDirectLate = ['douyin', 'bytedance', 'cdn_cn', 'bilibili'];
+/** 上面两组的合集，用于 DNS 策略与 fake-ip 白名单 */
+const cnAllSets = cnDirectEarly.concat(cnDirectLate);
 
 /** 策略组公共参数 */
 const groupBase = {
-  url: 'https://cp.cloudflare.com/generate_204',
+  url: healthCheckUrl,
   interval: 600,
-  timeout: 3000,
+  timeout: 5000,
   lazy: true,
-  'max-failed-times': 3,
-  'expected-status': '204',
+  'max-failed-times': 5,
 };
 const selectBase = Object.assign({}, groupBase, { type: 'select' });
 const autoBase = Object.assign({}, groupBase, {
@@ -211,12 +241,13 @@ const directProxies = [
 
 /**
  * 分流服务定义。数组顺序 = 生成规则的顺序，越具体的服务要越靠前。
- *   key      对应 enableGroups 里的开关
- *   name     策略组显示名
- *   direct   true = 组内附带「直连」选项（默认仍是代理）
- *   pick     组的默认选中项（提到列表首位，客户端默认选中第一项）
- *   sets     该组需要的规则集
- *   rules    该组的路由规则；带 process:true 的会在关闭进程匹配时被跳过
+ *   key       对应 enableGroups 里的开关
+ *   name      策略组显示名
+ *   direct    true = 组内附带「直连」选项（默认仍是代理）
+ *   pick      组的默认选中项（提到列表首位，客户端默认选中第一项）
+ *   sets      该组需要的规则集
+ *   rules     该组的路由规则；带 process:true 的会在关闭进程匹配时被跳过
+ *   onlyRules 只贡献规则、不生成策略组（用于给已有组补充规则）
  */
 const services = [
   {
@@ -278,6 +309,14 @@ const services = [
     icon: icon('TikTok'),
     sets: { tiktok: site('tiktok') },
     rules: ['RULE-SET,tiktok,TikTok'],
+  },
+  {
+    // 字节的海外服务（CapCut / musical.ly / ibyteimg 等）走代理，
+    // 剩下的字节域名在下面的国内规则里直连，两条顺序不能反。
+    key: 'TikTok',
+    name: 'TikTok',
+    onlyRules: true,
+    rules: ['RULE-SET,bytedance_notcn,TikTok'],
   },
   {
     key: 'Netflix',
@@ -407,9 +446,15 @@ const services = [
   },
 ];
 
-/** 屏蔽国外 QUIC：UDP/443 且不是国内目标就丢掉 */
+/**
+ * 屏蔽国外 QUIC：UDP/443 且不是国内目标就丢掉。
+ * 「不是国内」的判定把国内 App 常用的规则集全列进来，否则抖音这类走 QUIC 的
+ * 图片 CDN 会被一起拦掉（图集刷不出来就是这个原因）。
+ */
 const quicRule =
-  'AND,((NETWORK,UDP),(DST-PORT,443),(NOT,((OR,((RULE-SET,cn_site),(RULE-SET,cn_ip,no-resolve)))))),REJECT';
+  'AND,((NETWORK,UDP),(DST-PORT,443),(NOT,((OR,(' +
+  ['cn_site'].concat(cnAllSets).map((k) => `(RULE-SET,${k})`).join(',') +
+  ',(RULE-SET,cn_ip,no-resolve)))))),REJECT';
 
 // ==================================================================
 //                          工具函数
@@ -486,6 +531,8 @@ function prepareProxies(config) {
       }
     }
     if (pref && next['ip-version'] !== pref) next = Object.assign({}, next, { 'ip-version': pref });
+    // 不少机场订阅漏了 udp 字段，补上之后 QUIC、游戏、语音才正常
+    if (options.节点强制启用UDP && next.udp !== true) next = Object.assign({}, next, { udp: true });
     return next;
   });
 
@@ -525,9 +572,22 @@ function hostMatch(pattern, domain) {
   return false;
 }
 
+/** TLS 握手要用的域名字段：不同协议叫法不一样，改写 server 时必须把原域名留在这里 */
+function sniFieldOf(proxy) {
+  const type = String(proxy.type || '').toLowerCase();
+  if (type === 'trojan' || type === 'hysteria' || type === 'hysteria2' || type === 'tuic' || type === 'anytls') {
+    return 'sni';
+  }
+  return 'servername';
+}
+
 /**
- * 把订阅 hosts 里能定死的节点域名直接写进 proxy.server。
- * 机场用 hosts 映射节点域名时，客户端换了 DNS 就会解析失败，写死成 IP 后彻底不依赖解析。
+ * 把订阅 hosts 里能定死的节点域名写进 proxy.server（仅在「写死节点IP」开启时执行）。
+ *
+ * 默认不做这件事：trojan / hysteria2 / vless-reality 这类协议不写 tls: true 也是 TLS，
+ * 一旦 server 变成 IP 而 SNI 没跟上，握手就会失败，表现是所有节点测速超时。
+ * 默认走的是另一条更安全的路——把机场 hosts 里跟节点有关的条目原样保留到输出的 hosts，
+ * 由 use-hosts 完成解析，域名不变、SNI 不动。
  */
 function applyHosts(proxies, hosts) {
   if (!hosts || typeof hosts !== 'object') return { proxies, used: false };
@@ -556,9 +616,10 @@ function applyHosts(proxies, hosts) {
     const hit = resolve(p.server, 0);
     if (!hit) return p;
     used = true;
-    // 记下原域名，TLS SNI 仍需要它
     const patch = { server: hit };
-    if (p.tls && !p.servername && !p.sni) patch.servername = p.server;
+    // 原域名必须留给 TLS，否则证书校验过不去
+    const field = sniFieldOf(p);
+    if (!p.servername && !p.sni && !p.host) patch[field] = p.server;
     return Object.assign({}, p, patch);
   });
   return { proxies: mapped, used };
@@ -600,7 +661,7 @@ function isPublicDns(entry) {
  */
 function buildDns(config, proxies) {
   const orig = config.dns && typeof config.dns === 'object' ? config.dns : {};
-  const applied = applyHosts(proxies, config.hosts);
+  const applied = options.写死节点IP ? applyHosts(proxies, config.hosts) : { proxies, used: false };
   const mapped = applied.proxies;
 
   const proxyDomains = [];
@@ -644,19 +705,20 @@ function buildDns(config, proxies) {
     'enhanced-mode': 'fake-ip',
     'fake-ip-range': '198.18.0.1/15',
     'fake-ip-filter': [
-      'rule-set:private',
-      'rule-set:fakeip_filter',
-      'rule-set:geolocation-cn',
+      `rule-set:fakeip_filter,geolocation-cn,${cnAllSets.join(',')}`,
       '+.lan',
       '+.local',
     ].concat(proxyDomains),
     'default-nameserver': cnDns,
-    'proxy-server-nameserver': cnDoh,
+    // 节点域名默认用明文国内 DNS 解析：DoH 首次连接慢、被干扰时会直接导致全部节点超时
+    'proxy-server-nameserver': options.节点域名用加密DNS ? cnDoh : cnDns,
     nameserver: fgDoh,
     // 一个 rule-set: 前缀后面用逗号并列多个规则集，写成 rule-set:a,rule-set:b 内核会解析失败
     'nameserver-policy': {
-      'rule-set:cn_site,private': cnDns,
-      // 规则集 CDN 交给国内 DNS 解析：否则「拉规则集要先解析域名，解析又要先有代理」会互相等
+      [`rule-set:cn_site,${cnAllSets.join(',')}`]: cnDns,
+      // 测速地址必须能不经代理就解析出来，否则「测速等解析、解析等代理、代理等测速」互相锁死
+      [healthCheckDomains.join(',')]: cnDns,
+      // 规则集 CDN 同理：拉规则集不该反过来依赖代理
       '+.jsdelivr.net': cnDns,
     },
     'direct-nameserver': ['system'].concat(cnDns),
@@ -672,9 +734,8 @@ function buildDns(config, proxies) {
     // 掐掉 B 站 PCDN，解决看视频/直播卡顿和上传占满带宽
     '+.mcdn.bilivideo.com': ['0.0.0.0'],
     '+.mcdn.bilivideo.cn': ['0.0.0.0'],
-    '+.szbdyd.com': ['0.0.0.0'],
   };
-  // 订阅 hosts 里跟节点域名相关的条目保留下来（applyHosts 没能定死成 IP 的情况）
+  // 订阅 hosts 里跟节点域名相关的条目一律保留：不改写 server 时，节点域名就靠它解析
   if (config.hosts && typeof config.hosts === 'object') {
     for (const key of Object.keys(config.hosts)) {
       if (hosts[key] !== undefined) continue;
@@ -779,6 +840,17 @@ function buildGroups(proxies, custom) {
   if (enableGroups.负载均衡) {
     baseGroups.push(Object.assign({}, balanceBase, { name: '负载均衡', proxies: allNames.slice() }));
   }
+  if (enableGroups.故障转移) {
+    baseGroups.push(
+      Object.assign({}, groupBase, {
+        type: 'fallback',
+        name: '故障转移',
+        'exclude-type': 'DIRECT',
+        icon: icon('Bypass'),
+        proxies: allNames.slice(),
+      }),
+    );
+  }
   const baseNames = baseGroups.map((g) => g.name);
 
   const customGroup = customNames.length
@@ -815,6 +887,9 @@ function buildGroups(proxies, custom) {
       }
     }
 
+    // onlyRules 的条目只贡献规则，不再重复生成同名策略组
+    if (svc.onlyRules) continue;
+
     let members = ['默认代理'].concat(customGroupNames, baseNames, regionSelects);
     if (svc.direct) members.push('直连');
     if (options.分流组平铺全部节点) members = members.concat(allNames);
@@ -837,7 +912,7 @@ function buildGroups(proxies, custom) {
   const directGroup = Object.assign({}, selectBase, {
     name: '直连',
     icon: icon('China_Map'),
-    url: 'https://connectivitycheck.platform.hicloud.com/generate_204',
+    url: 'http://connectivitycheck.platform.hicloud.com/generate_204',
     proxies: directProxies.map((p) => p.name),
   });
 
@@ -874,7 +949,9 @@ function main(config) {
   out['ipv6'] = options.启用IPv6;
   out['unified-delay'] = true;
   out['tcp-concurrent'] = true;
+  out['keep-alive-idle'] = 600;
   out['keep-alive-interval'] = 30;
+  out['global-ua'] = 'clash.meta';
   out['find-process-mode'] = options.进程匹配 ? 'strict' : 'off';
   out['external-controller'] = '127.0.0.1:9090';
   out['external-ui'] = 'ui';
@@ -884,15 +961,25 @@ function main(config) {
 
   out['sniffer'] = {
     enable: true,
-    'force-dns-mapping': true,
-    'parse-pure-ip': true,
     'override-destination': false,
     sniff: {
       HTTP: { ports: [80, '8080-8880'], 'override-destination': true },
       TLS: { ports: [443, 8443] },
       QUIC: { ports: [443, 8443] },
     },
-    'skip-domain': ['+.push.apple.com', '+.apple.com', 'Mijia Cloud', 'dlg.io.mi.com'],
+    // 这些域名嗅探反而会出问题：Apple 推送、微信、小米、向日葵、腾讯图片 CDN
+    'skip-domain': [
+      '+.push.apple.com',
+      '+.apple.com',
+      '+.wechat.com',
+      '+.wechatapp.com',
+      '+.qq.com',
+      '+.qpic.cn',
+      '+.oray.com',
+      '+.sunlogin.net',
+      'Mijia Cloud',
+      'dlg.io.mi.com',
+    ],
   };
 
   out['ntp'] = { enable: true, 'write-to-system': false, server: 'ntp.aliyun.com', port: 123, interval: 60 };
@@ -900,7 +987,7 @@ function main(config) {
   if (options.启用TUN) {
     out['tun'] = {
       enable: true,
-      stack: 'mixed',
+      stack: 'gvisor',
       'auto-route': true,
       'strict-route': true,
       'auto-redirect': true,
@@ -918,16 +1005,14 @@ function main(config) {
   out['rule-providers'] = built.providers;
 
   out['rules'] = customRules
-    .concat([
-      'RULE-SET,private,直连',
-      'RULE-SET,games_cn,直连',
-      'RULE-SET,epicgames,直连',
-      'RULE-SET,nvidia_cn,直连',
-      'RULE-SET,apple_cn,直连',
-      'RULE-SET,microsoft_cn,直连',
-    ])
+    // 内网与明确的国内服务先直连
+    .concat(cnDirectEarly.map((k) => `RULE-SET,${k},直连`))
     .concat(options.屏蔽国外QUIC ? [quicRule] : [])
+    // 各分流组（TikTok 及字节海外域名在这一段里）
     .concat(built.rules)
+    // 剩下的字节系、国内 CDN、B 站一律直连，必须排在分流之后
+    .concat(cnDirectLate.map((k) => `RULE-SET,${k},直连`))
+    // 兜底：国外域名走代理，国内域名与国内 IP 直连
     .concat([
       'RULE-SET,geolocation-!cn,默认代理',
       'RULE-SET,geolocation-cn,直连',
