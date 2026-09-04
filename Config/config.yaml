@@ -791,6 +791,7 @@ proxy-groups:
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/global.png'
     proxies:
       - 节点选择
+      - 全部节点
       - YouTube
       - FCM
       - GoogleVPN
@@ -854,7 +855,6 @@ proxy-groups:
       - 其他节点自动
       - 其他节点均衡
       - 其他节点
-      - 全部节点
       - 故障转移
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
@@ -865,6 +865,17 @@ proxy-groups:
     name: 节点选择
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/select.png'
     proxies: [香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 故障转移]
+  - url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: select
+    name: 全部节点
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/all.png'
+    include-all: true
+    exclude-type: DIRECT
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1580,17 +1591,6 @@ proxy-groups:
     exclude-type: DIRECT
     exclude-filter: '🇭🇰|香港|港区|港區|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇹🇼|台湾|台灣|台北|台中|台南|新北|彰化|(?<![A-Za-z])TW(?![A-Za-z])|taiwan|taipei|🇺🇸|🇺🇲|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|los\s*angeles|ashburn|kansas|🇪🇺|🇬🇧|🇩🇪|🇫🇷|🇳🇱|🇷🇺|🇹🇷|🇮🇹|🇪🇸|🇸🇪|🇨🇭|🇵🇱|🇦🇹|🇧🇪|🇩🇰|🇫🇮|🇳🇴|🇮🇪|🇵🇹|🇨🇿|🇭🇺|🇷🇴|🇬🇷|🇧🇬|🇭🇷|🇸🇰|🇸🇮|🇱🇹|🇱🇻|🇪🇪|🇱🇺|🇲🇹|🇨🇾|🇮🇸|🇷🇸|🇺🇦|🇧🇾|🇲🇩|🇦🇱|🇲🇰|🇧🇦|🇲🇪|🇲🇨|🇱🇮|🇸🇲|🇦🇩|🇻🇦|欧洲|歐洲|英国|英國|伦敦|倫敦|德国|德國|法兰克福|法蘭克福|法国|法國|巴黎|荷兰|荷蘭|阿姆斯特丹|俄罗斯|俄羅斯|莫斯科|圣彼得堡|土耳其|伊斯坦布尔|意大利|米兰|米蘭|西班牙|马德里|馬德里|瑞典|斯德哥尔摩|瑞士|苏黎世|蘇黎世|波兰|波蘭|华沙|華沙|奥地利|奧地利|维也纳|維也納|比利时|比利時|丹麦|丹麥|芬兰|芬蘭|挪威|爱尔兰|愛爾蘭|都柏林|葡萄牙|里斯本|捷克|布拉格|匈牙利|布达佩斯|布達佩斯|罗马尼亚|羅馬尼亞|希腊|希臘|雅典|乌克兰|烏克蘭|(?<![A-Za-z])(?:UK|DEU|GBR|FRA|NLD|RUS|POL|TUR|ITA|ESP|SWE|CHE|AUT|BEL|DNK|FIN|NOR|IRL|PRT|CZE|HUN|ROU|GRC)(?![A-Za-z])|europe|london|germany|frankfurt|france|paris|netherlands|amsterdam|russia|moscow|turkey|istanbul|italy|milan|spain|madrid|sweden|stockholm|switzerland|zurich|poland|warsaw|austria|vienna|ireland|dublin|portugal|lisbon|czech|prague|hungary|budapest|romania|greece|athens|ukraine|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
     empty-fallback: REJECT
-  - url: 'http://www.gstatic.com/generate_204'
-    interval: 300
-    timeout: 5000
-    lazy: true
-    max-failed-times: 5
-    type: select
-    name: 全部节点
-    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/all.png'
-    include-all: true
-    exclude-type: DIRECT
-    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000

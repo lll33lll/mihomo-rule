@@ -684,12 +684,13 @@ function buildGroups(proxies, custom) {
     Object.assign({}, selectBase, { name: '⚪ 丢弃', hidden: true, proxies: ['REJECT-DROP'] }),
   ];
 
-  const ordered = [mainGroup].concat(
+  // 「全部节点」紧跟「节点选择」，手动挑节点时不用划到列表最下面
+  const ordered = [mainGroup, allGroup].concat(
     serviceGroups,
     utilGroups,
     homeGroup ? [homeGroup] : [],
     regionGroups,
-    [allGroup, fallbackGroup],
+    [fallbackGroup],
   );
 
   const globalGroup = Object.assign({}, selectBase, {
