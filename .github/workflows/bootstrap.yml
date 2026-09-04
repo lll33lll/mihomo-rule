@@ -1,0 +1,67 @@
+name: bootstrap
+
+# 一次性引导流程：把同步机制缺失的文件补进仓库，跑完整校验后自删。
+on:
+  push:
+    paths:
+      - '.github/workflows/bootstrap.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 取回文件
+        env:
+          BASE: https://ghrelay.flyin.ccwu.cc/637480a073180ac8f3b51d0a3cc240c3b0a1
+        run: |
+          set -e
+          curl -fsSL "$BASE/override.js"            -o Script/override.js
+          curl -fsSL "$BASE/run.js"                 -o test/run.js
+          curl -fsSL "$BASE/README.md"              -o README.md
+          curl -fsSL "$BASE/sync-upstream.js"       -o tools/sync-upstream.js
+          curl -fsSL "$BASE/upstream.js"            -o tools/upstream.js
+          curl -fsSL "$BASE/upstream-snapshot.yaml" -o test/upstream-snapshot.yaml
+
+      - name: 校验内容指纹
+        run: |
+          set -e
+          check() { echo "$1  $2" | sha256sum -c -; }
+          check 547606241e7b34b1482c9b9293c1daabcbf93d88128c90bb9ea543b5c1194e3e Script/override.js
+          check a1763b907c531e9794bbfff2bd946bab83cd551eef99d159c9b1081cd30144a7 test/run.js
+          check 56514af57e0fe4e5a19a5e910f7e531ef2e4e5e774c17add6f4ebcb6d715f30f README.md
+          check b9aa1bc37abca91d23e588d584da4fdd312dd9547ff0afb506ca1a6ab95da6ac tools/sync-upstream.js
+          check b92aeb32b53cfa75bea8677541a2756918319f6682fcd1278107f2a1d03ac0bb tools/upstream.js
+          check 252d7c21f32e27a5525039d81a20d79aa6b907c4591497f5691d84e069875b96 test/upstream-snapshot.yaml
+
+      - name: 脚本自检
+        run: node test/run.js
+
+      - name: 用快照重跑生成器（必须零 diff）
+        run: |
+          cp Script/override.js /tmp/before.js
+          node tools/sync-upstream.js --offline
+          diff -u /tmp/before.js Script/override.js
+
+      - name: 生成配置文件版
+        run: node tools/gen-config.js
+
+      - name: 用 mihomo 内核校验两份产物
+        run: bash tools/verify.sh
+
+      - name: 提交并移除本引导流程
+        run: |
+          rm .github/workflows/bootstrap.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: 补齐上游同步机制（sync-upstream 生成器 + 上游快照 + 自检）'
+          git push
