@@ -12,6 +12,11 @@ on:
 permissions:
   contents: write
 
+# 连续提交时只保留最新一次，避免两个 job 同时往同一分支推产物
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
