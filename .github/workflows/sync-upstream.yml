@@ -1,0 +1,77 @@
+name: 同步上游规则
+
+# 手动触发：仓库页 → Actions → 「同步上游规则」→ Run workflow
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 只看差异，不写入不提交
+        type: boolean
+        default: false
+  # 想让它自动跟随上游，取消下面两行的注释（每周一 03:00 北京时间）
+  # schedule:
+  #   - cron: '0 19 * * 0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 只看差异
+        if: inputs.dry_run
+        run: |
+          set +e
+          node tools/sync-upstream.js --check
+          code=$?
+          set -e
+          # 0 = 已是最新，3 = 有更新可同步，都算正常结果
+          if [ "$code" = "0" ] || [ "$code" = "3" ]; then exit 0; fi
+          exit "$code"
+
+      - name: 抓上游并写入覆写脚本
+        if: ${{ !inputs.dry_run }}
+        id: sync
+        run: node tools/sync-upstream.js
+
+      - name: 脚本自检（含与上游快照逐项比对）
+        if: ${{ !inputs.dry_run }}
+        run: node test/run.js
+
+      - name: 生成配置文件版
+        if: ${{ !inputs.dry_run }}
+        run: node tools/gen-config.js
+
+      - name: 用 mihomo 内核校验两份产物
+        if: ${{ !inputs.dry_run }}
+        run: bash tools/verify.sh
+
+      - name: 提交
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Script/override.js Config/config.yaml test/upstream-snapshot.yaml
+          if git diff --staged --quiet; then
+            echo '上游没有变化，无需提交'
+            exit 0
+          fi
+          # commit message 由 sync 步骤写成文件，不经 shell 插值（上游内容不可信）
+          msg="${RUNNER_TEMP:-/tmp}/sync-msg.txt"
+          if [ -f "$msg" ]; then
+            git commit -F "$msg"
+          else
+            git commit -m 'chore: 同步上游规则'
+          fi
+          git push
