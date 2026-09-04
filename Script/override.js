@@ -15,9 +15,15 @@
 //                          用户配置区
 // ==================================================================
 
-/** 地区组：按节点名匹配，匹配不到就不生成该组 */
+/** 地区组：按节点名匹配，匹配不到就不生成该组（顺序即组的显示顺序） */
 const regions = [
   { name: '香港节点', flag: '🇭🇰', re: /🇭🇰|香港|港区|港區|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong/i, icon: 'Hongkong' },
+  {
+    name: '新加坡节点',
+    flag: '🇸🇬',
+    re: /🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore/i,
+    icon: 'Singapore',
+  },
   {
     name: '日本节点',
     flag: '🇯🇵',
@@ -25,12 +31,23 @@ const regions = [
     icon: 'Japan',
   },
   {
+    name: '台湾节点',
+    flag: '🇹🇼',
+    re: /🇹🇼|台湾|台灣|台北|台中|台南|新北|彰化|(?<![A-Za-z])TW(?![A-Za-z])|taiwan|taipei/i,
+    icon: 'Taiwan_China',
+  },
+  {
     name: '美国节点',
     flag: '🇺🇸',
     re: /🇺🇸|🇺🇲|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|los\s*angeles|ashburn|kansas/i,
     icon: 'America',
   },
-  { name: '新加坡节点', flag: '🇸🇬', re: /🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore/i, icon: 'Singapore' },
+  {
+    name: '欧洲节点',
+    flag: '🇪🇺',
+    re: /🇪🇺|🇬🇧|🇩🇪|🇫🇷|🇳🇱|🇷🇺|🇹🇷|🇮🇹|🇪🇸|🇸🇪|🇨🇭|🇵🇱|🇦🇹|🇧🇪|🇩🇰|🇫🇮|🇳🇴|🇮🇪|🇵🇹|🇨🇿|🇭🇺|🇷🇴|🇬🇷|🇧🇬|🇭🇷|🇸🇰|🇸🇮|🇱🇹|🇱🇻|🇪🇪|🇱🇺|🇲🇹|🇨🇾|🇮🇸|🇷🇸|🇺🇦|🇧🇾|🇲🇩|🇦🇱|🇲🇰|🇧🇦|🇲🇪|🇲🇨|🇱🇮|🇸🇲|🇦🇩|🇻🇦|欧洲|歐洲|英国|英國|伦敦|倫敦|德国|德國|法兰克福|法蘭克福|法国|法國|巴黎|荷兰|荷蘭|阿姆斯特丹|俄罗斯|俄羅斯|莫斯科|圣彼得堡|土耳其|伊斯坦布尔|意大利|米兰|米蘭|西班牙|马德里|馬德里|瑞典|斯德哥尔摩|瑞士|苏黎世|蘇黎世|波兰|波蘭|华沙|華沙|奥地利|奧地利|维也纳|維也納|比利时|比利時|丹麦|丹麥|芬兰|芬蘭|挪威|爱尔兰|愛爾蘭|都柏林|葡萄牙|里斯本|捷克|布拉格|匈牙利|布达佩斯|布達佩斯|罗马尼亚|羅馬尼亞|希腊|希臘|雅典|乌克兰|烏克蘭|(?<![A-Za-z])(?:UK|DEU|GBR|FRA|NLD|RUS|POL|TUR|ITA|ESP|SWE|CHE|AUT|BEL|DNK|FIN|NOR|IRL|PRT|CZE|HUN|ROU|GRC)(?![A-Za-z])|europe|london|germany|frankfurt|france|paris|netherlands|amsterdam|russia|moscow|turkey|istanbul|italy|milan|spain|madrid|sweden|stockholm|switzerland|zurich|poland|warsaw|austria|vienna|ireland|dublin|portugal|lisbon|czech|prague|hungary|budapest|romania|greece|athens|ukraine/i,
+    icon: 'European',
+  },
 ];
 
 /** 没匹配到任何地区的节点归到这里 */
@@ -69,6 +86,13 @@ const customProxies = [
 const junkRe =
   /群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b/i;
 
+/**
+ * 机场信息条的硬特征：命中就一律剔除，不因为「名字里带地区词」而豁免。
+ * （例如「剩余流量：188.88 GB」里的 GB 会被当成英国，靠这条兜住）
+ */
+const hardJunkRe =
+  /剩余|流量|到期|过期|已用|余额|官网|官址|订阅|邀请|返利|工单|客服|贩卖|倒卖|重置|发布页|失联|\bexpire\b|\btraffic\b|\btotal\b|\bhttps?:\/\//i;
+
 // ==================================================================
 //                        以下一般不用改
 // ==================================================================
@@ -87,126 +111,114 @@ const healthCheckDomains = ['www.gstatic.com', 'cp.cloudflare.com', 'connectivit
 
 const icon = (n) => `${LAN}icon/${n}.png`;
 
+// ==================================================================
+// >>> AUTO-GENERATED BEGIN — 由 tools/sync-upstream.js 从上游写入，勿手改
+// 这一整块（规则集 / 规则 / fake-ip 白名单 / 分流组）是上游
+// Lanlan13-14/Rules 的 configfull.yaml 的机器翻译结果。
+// 要同步上游更新：GitHub → Actions → 「同步上游规则」→ Run workflow。
+// ==================================================================
+
+/** 本块对应的上游版本 */
+const upstream = {
+  repo: 'Lanlan13-14/Rules',
+  file: 'configfull.yaml',
+  commit: '6c81cccffc',
+  date: '2026-08-10T23:25:37Z',
+};
+
 /**
  * 规则集定义，与上游 configfull.yaml 一一对应。
- * 每项：[名称, 行为(d=domain / i=ipcidr), 前缀(M=meta-rules-dat / L=Lanlan), 路径]
+ * 每项：[名称, 行为(d=domain / i=ipcidr / c=classical), 前缀(M=meta-rules-dat / L=Lanlan / U=完整URL), 路径, 格式?]
  */
 const providerDefs = [
-  // --- 直连类 ---
+  ['banAd_domain', 'd', 'L', 'rules/Domain/banAd_mini.mrs'],
   ['private_domain', 'd', 'M', 'geo/geosite/private.mrs'],
-  ['cn_domain', 'd', 'M', 'geo/geosite/cn.mrs'],
-  ['direct_domain', 'd', 'L', 'rules/Domain/direct.mrs'],
   ['bank_cn_domain', 'd', 'M', 'geo/geosite/category-bank-cn.mrs'],
-  ['ai_cn_domain', 'd', 'M', 'geo/geosite/category-ai-cn.mrs'],
-  ['alibaba_domain', 'd', 'M', 'geo/geosite/alibaba.mrs'],
-  ['aliyun_domain', 'd', 'M', 'geo/geosite/aliyun.mrs'],
-  ['115_domain', 'd', 'M', 'geo/geosite/115.mrs'],
-  ['tencent_domain', 'd', 'M', 'geo/geosite/tencent.mrs'],
-  ['tencent!cn_domain', 'd', 'M', 'geo/geosite/tencent%40!cn.mrs'],
-  ['wechat_domain', 'd', 'L', 'rules/Domain/WeChat.mrs'],
   ['xiaomi_domain', 'd', 'M', 'geo/geosite/xiaomi.mrs'],
-  ['iptv_domain', 'd', 'L', 'rules/Domain/iptv.mrs'],
-  ['ifast_domain', 'd', 'M', 'geo/geosite/ifast.mrs'],
-  ['game_cn_domain', 'd', 'M', 'geo/geosite/category-games%40cn.mrs'],
+  ['biliintl_domain', 'd', 'M', 'geo/geosite/bilibili%40!cn.mrs'],
+  ['bilibili_domain', 'd', 'M', 'geo/geosite/bilibili.mrs'],
+  ['bahamut_domain', 'd', 'M', 'geo/geosite/bahamut.mrs'],
+  ['spotify_domain', 'd', 'M', 'geo/geosite/spotify.mrs'],
   ['steam_cn_domain', 'd', 'M', 'geo/geosite/steam%40cn.mrs'],
   ['steamcdn_domain', 'd', 'L', 'rules/Domain/Steam-domain.mrs'],
-  ['NetEaseMusic_domain', 'd', 'L', 'rules/Domain/NetEaseMusic-domain.mrs'],
-  ['apple_cn_domain', 'd', 'M', 'geo/geosite/apple%40cn.mrs'],
-  ['media_cn_domain', 'd', 'M', 'geo/geosite/category-media-cn.mrs'],
-  ['fakeip_filter_domain', 'd', 'L', 'rules/Domain/fakeip-filter.mrs'],
-
-  // --- 广告 ---
-  ['banAd_domain', 'd', 'L', 'rules/Domain/banAd_mini.mrs'],
-
-  // --- 代理类 ---
-  ['proxy_domain', 'd', 'L', 'rules/Domain/proxy.mrs'],
-  ['gfw_domain', 'd', 'M', 'geo/geosite/gfw.mrs'],
-  ['geolocation-!cn', 'd', 'M', 'geo/geosite/geolocation-!cn.mrs'],
-  ['Cloudflare_domain', 'd', 'M', 'geo/geosite/cloudflare.mrs'],
-  ['pikpak_domain', 'd', 'M', 'geo/geosite/pikpak.mrs'],
-  ['speedtest_domain', 'd', 'M', 'geo/geosite/ookla-speedtest.mrs'],
-  ['Wise_domain', 'd', 'M', 'geo/geosite/wise.mrs'],
-  ['paypal_domain', 'd', 'M', 'geo/geosite/paypal.mrs'],
-
-  // --- 哔哩哔哩 / 巴哈姆特 ---
-  ['bilibili_domain', 'd', 'M', 'geo/geosite/bilibili.mrs'],
-  ['biliintl_domain', 'd', 'M', 'geo/geosite/bilibili%40!cn.mrs'],
-  ['bahamut_domain', 'd', 'M', 'geo/geosite/bahamut.mrs'],
-
-  // --- Google 系 ---
-  ['github_domain', 'd', 'M', 'geo/geosite/github.mrs'],
-  ['gitbook_domain', 'd', 'M', 'geo/geosite/gitbook.mrs'],
-  ['googlevpn_domain', 'd', 'L', 'rules/Domain/googleVPN.mrs'],
+  ['steam_domain', 'd', 'M', 'geo/geosite/steam.mrs'],
+  ['ai!cn_domain', 'd', 'M', 'geo/geosite/category-ai-!cn.mrs'],
+  ['openai_domain', 'd', 'M', 'geo/geosite/openai.mrs'],
   ['youtube_domain', 'd', 'M', 'geo/geosite/youtube.mrs'],
-  ['fcm_domain', 'd', 'M', 'geo/geosite/googlefcm.mrs'],
   ['google_domain', 'd', 'L', 'rules/Domain/google.mrs'],
-
-  // --- 微软 ---
+  ['github_domain', 'd', 'M', 'geo/geosite/github.mrs'],
+  ['telegram_domain', 'd', 'M', 'geo/geosite/telegram.mrs'],
+  ['netflix_domain', 'd', 'M', 'geo/geosite/netflix.mrs'],
+  ['paypal_domain', 'd', 'M', 'geo/geosite/paypal.mrs'],
   ['onedrive_domain', 'd', 'M', 'geo/geosite/onedrive.mrs'],
   ['microsoft_domain', 'd', 'M', 'geo/geosite/microsoft.mrs'],
-
-  // --- AI ---
-  ['ai!cn_domain', 'd', 'M', 'geo/geosite/category-ai-!cn.mrs'],
-  ['ai_domain', 'd', 'L', 'rules/Domain/ai.mrs'],
-  ['openai_domain', 'd', 'M', 'geo/geosite/openai.mrs'],
-
-  // --- 通讯 ---
-  ['telegram_domain', 'd', 'M', 'geo/geosite/telegram.mrs'],
-  ['line_domain', 'd', 'M', 'geo/geosite/line.mrs'],
-  ['talkatone_domain', 'd', 'L', 'rules/Domain/Talkatone-domain.mrs'],
-  ['discord_domain', 'd', 'M', 'geo/geosite/discord.mrs'],
-  ['signal_domain', 'd', 'M', 'geo/geosite/signal.mrs'],
-
-  // --- 苹果 ---
-  ['appleTV_domain', 'd', 'L', 'rules/Domain/appletv.mrs'],
   ['apple_firmware_domain', 'd', 'L', 'rules/Domain/applefirmware.mrs'],
   ['apple_domain', 'd', 'M', 'geo/geosite/apple.mrs'],
-
-  // --- 流媒体 ---
+  ['speedtest_domain', 'd', 'M', 'geo/geosite/ookla-speedtest.mrs'],
   ['tiktok_domain', 'd', 'M', 'geo/geosite/tiktok.mrs'],
-  ['netflix_domain', 'd', 'M', 'geo/geosite/netflix.mrs'],
+  ['gfw_domain', 'd', 'M', 'geo/geosite/gfw.mrs'],
+  ['geolocation-!cn', 'd', 'M', 'geo/geosite/geolocation-!cn.mrs'],
+  ['cn_domain', 'd', 'M', 'geo/geosite/cn.mrs'],
+  ['media_cn_domain', 'd', 'M', 'geo/geosite/category-media-cn.mrs'],
+  ['media!cn_domain', 'd', 'M', 'geo/geosite/category-social-media-!cn.mrs'],
+  ['Cloudflare_domain', 'd', 'M', 'geo/geosite/cloudflare.mrs'],
+  ['gitbook_domain', 'd', 'M', 'geo/geosite/gitbook.mrs'],
   ['disney_domain', 'd', 'M', 'geo/geosite/disney.mrs'],
   ['hbo_domain', 'd', 'M', 'geo/geosite/hbo.mrs'],
   ['primevideo_domain', 'd', 'M', 'geo/geosite/primevideo.mrs'],
-  ['emby_domain', 'd', 'L', 'rules/Domain/emby.mrs'],
-  ['spotify_domain', 'd', 'M', 'geo/geosite/spotify.mrs'],
-  ['twitch_domain', 'd', 'M', 'geo/geosite/twitch.mrs'],
-  ['porn_domain', 'd', 'M', 'geo/geosite/category-porn.mrs'],
-  ['TVB_domain', 'd', 'L', 'rules/Domain/tvb.mrs'],
-  ['media!cn_domain', 'd', 'M', 'geo/geosite/category-social-media-!cn.mrs'],
-
-  // --- Meta ---
-  ['facebook_domain', 'd', 'M', 'geo/geosite/facebook.mrs'],
-  ['whatsapp_domain', 'd', 'M', 'geo/geosite/whatsapp.mrs'],
-  ['instagram_domain', 'd', 'M', 'geo/geosite/instagram.mrs'],
-  ['threads_domain', 'd', 'M', 'geo/geosite/threads.mrs'],
-  ['meta_domain', 'd', 'M', 'geo/geosite/meta.mrs'],
-
-  // --- 游戏 ---
-  ['steam_domain', 'd', 'M', 'geo/geosite/steam.mrs'],
+  ['NetEaseMusic_domain', 'd', 'L', 'rules/Domain/NetEaseMusic-domain.mrs'],
+  ['Amazon_domain', 'd', 'M', 'geo/geosite/amazon.mrs'],
+  ['Shopee_domain', 'd', 'M', 'geo/geosite/shopee.mrs'],
+  ['ebay_domain', 'd', 'M', 'geo/geosite/ebay.mrs'],
+  ['appleTV_domain', 'd', 'L', 'rules/Domain/appletv.mrs'],
   ['Epic_domain', 'd', 'M', 'geo/geosite/epicgames.mrs'],
   ['EA_domain', 'd', 'M', 'geo/geosite/ea.mrs'],
   ['Blizzard_domain', 'd', 'M', 'geo/geosite/blizzard.mrs'],
   ['UBI_domain', 'd', 'L', 'rules/Domain/ubi.mrs'],
   ['Sony_domain', 'd', 'M', 'geo/geosite/sony.mrs'],
   ['Nintendo_domain', 'd', 'M', 'geo/geosite/nintendo.mrs'],
-
-  // --- 电商 ---
-  ['Amazon_domain', 'd', 'M', 'geo/geosite/amazon.mrs'],
-  ['Shopee_domain', 'd', 'M', 'geo/geosite/shopee.mrs'],
+  ['facebook_domain', 'd', 'M', 'geo/geosite/facebook.mrs'],
+  ['whatsapp_domain', 'd', 'M', 'geo/geosite/whatsapp.mrs'],
+  ['instagram_domain', 'd', 'M', 'geo/geosite/instagram.mrs'],
+  ['threads_domain', 'd', 'M', 'geo/geosite/threads.mrs'],
+  ['meta_domain', 'd', 'M', 'geo/geosite/meta.mrs'],
+  ['Wise_domain', 'd', 'M', 'geo/geosite/wise.mrs'],
+  ['ifast_domain', 'd', 'M', 'geo/geosite/ifast.mrs'],
+  ['line_domain', 'd', 'M', 'geo/geosite/line.mrs'],
+  ['talkatone_domain', 'd', 'L', 'rules/Domain/Talkatone-domain.mrs'],
   ['Shopify_domain', 'd', 'M', 'geo/geosite/shopify.mrs'],
-  ['ebay_domain', 'd', 'M', 'geo/geosite/ebay.mrs'],
-
-  // --- IP 类 ---
-  ['private_ip', 'i', 'M', 'geo/geoip/private.mrs'],
-  ['cn_ip', 'i', 'M', 'geo/geoip/cn.mrs'],
+  ['signal_domain', 'd', 'M', 'geo/geosite/signal.mrs'],
+  ['wechat_domain', 'd', 'L', 'rules/Domain/WeChat.mrs'],
+  ['proxy_domain', 'd', 'L', 'rules/Domain/proxy.mrs'],
+  ['direct_domain', 'd', 'L', 'rules/Domain/direct.mrs'],
+  ['apple_cn_domain', 'd', 'M', 'geo/geosite/apple%40cn.mrs'],
+  ['alibaba_domain', 'd', 'M', 'geo/geosite/alibaba.mrs'],
+  ['tencent!cn_domain', 'd', 'M', 'geo/geosite/tencent%40!cn.mrs'],
+  ['tencent_domain', 'd', 'M', 'geo/geosite/tencent.mrs'],
+  ['ai_cn_domain', 'd', 'M', 'geo/geosite/category-ai-cn.mrs'],
+  ['discord_domain', 'd', 'M', 'geo/geosite/discord.mrs'],
+  ['fcm_domain', 'd', 'M', 'geo/geosite/googlefcm.mrs'],
+  ['emby_domain', 'd', 'L', 'rules/Domain/emby.mrs'],
+  ['115_domain', 'd', 'M', 'geo/geosite/115.mrs'],
+  ['aliyun_domain', 'd', 'M', 'geo/geosite/aliyun.mrs'],
+  ['twitch_domain', 'd', 'M', 'geo/geosite/twitch.mrs'],
+  ['porn_domain', 'd', 'M', 'geo/geosite/category-porn.mrs'],
+  ['iptv_domain', 'd', 'L', 'rules/Domain/iptv.mrs'],
+  ['googlevpn_domain', 'd', 'L', 'rules/Domain/googleVPN.mrs'],
+  ['ai_domain', 'd', 'L', 'rules/Domain/ai.mrs'],
+  ['TVB_domain', 'd', 'L', 'rules/Domain/tvb.mrs'],
+  ['game_cn_domain', 'd', 'M', 'geo/geosite/category-games%40cn.mrs'],
+  ['fakeip_filter_domain', 'd', 'L', 'rules/Domain/fakeip-filter.mrs'],
+  ['pikpak_domain', 'd', 'M', 'geo/geosite/pikpak.mrs'],
   ['bilibili_ip', 'i', 'M', 'geo-lite/geoip/bilibili.mrs'],
+  ['cn_ip', 'i', 'M', 'geo/geoip/cn.mrs'],
   ['google_ip', 'i', 'M', 'geo/geoip/google.mrs'],
   ['telegram_ip', 'i', 'M', 'geo/geoip/telegram.mrs'],
   ['netflix_ip', 'i', 'M', 'geo/geoip/netflix.mrs'],
+  ['Amazon_ip', 'i', 'L', 'rules/IP/amazon-ip.mrs'],
   ['facebook_ip', 'i', 'M', 'geo/geoip/facebook.mrs'],
   ['twitter_ip', 'i', 'M', 'geo/geoip/twitter.mrs'],
-  ['Amazon_ip', 'i', 'L', 'rules/IP/amazon-ip.mrs'],
+  ['private_ip', 'i', 'M', 'geo/geoip/private.mrs'],
   ['talkatone_ip', 'i', 'L', 'rules/IP/Talkatone-ip.mrs'],
   ['steamcdn_ip', 'i', 'L', 'rules/IP/steamCDN-ip.mrs'],
   ['NetEaseMusic_ip', 'i', 'L', 'rules/IP/NetEaseMusic-ip.mrs'],
@@ -215,9 +227,7 @@ const providerDefs = [
   ['discord_asn', 'i', 'L', 'rules/IP/AS49544.mrs'],
 ];
 
-/**
- * 路由规则，顺序与上游 configfull.yaml 完全一致。
- */
+/** 路由规则，顺序与上游 configfull.yaml 完全一致 */
 const ruleList = [
   'RULE-SET,banAd_domain,隐私拦截',
   'RULE-SET,wechat_domain,全球直连',
@@ -342,11 +352,11 @@ const fakeIpSets = [
 
 /**
  * 分流策略组，与上游 configfull.yaml 的划分一致。
- *   tpl: 'proxy'  代理优先（对应上游 Proxy_first）
- *        'direct' 直连优先（对应上游 Direct_first）
- *        'all'    代理优先，且把全部节点平铺进组（对应上游 Include_all）
- *   fixed: 固定成员，用它就不走模板
- *   prefer: 存在时提到成员列表最前面
+ *   tpl: 'proxy'  代理优先（上游 Proxy_first）
+ *        'direct' 直连优先（上游 Direct_first）
+ *        'all'    代理优先并平铺全部节点（上游 Include_all）
+ *   fixed:  上游写死的成员，用它就不套模板
+ *   prefer: 上游把某个地区组写进了成员，存在时提到最前
  */
 const groupDefs = [
   { name: 'YouTube', tpl: 'proxy', icon: 'youtube' },
@@ -388,6 +398,10 @@ const groupDefs = [
   { name: '隐私拦截', fixed: ['🚫 拒绝', '⚪ 丢弃', '🟢 直连', '🔗 代理'], icon: 'block' },
   { name: 'Final', tpl: 'all', icon: 'final' },
 ];
+
+// ==================================================================
+// <<< AUTO-GENERATED END
+// ==================================================================
 
 /** 内置直连节点 */
 const directProxies = [{ name: '🟢 直连', type: 'direct', udp: true }];
@@ -449,7 +463,9 @@ function prepareProxies(config) {
     const t = String(p.type || '').toLowerCase();
     if (t === 'direct' || t === 'reject' || t === 'reject-drop' || t === 'pass' || t === 'rematch') return false;
     if (!options.过滤假节点) return true;
-    return matchRegions(p.name).length > 0 || !junkRe.test(p.name);
+    if (hardJunkRe.test(p.name)) return false;
+    // 带国旗或能归到某个地区的，按真节点处理（避免把 "🇭🇰 hk1.xxx.com" 这类误删）
+    return flagRe.test(p.name) || matchRegions(p.name).length > 0 || !junkRe.test(p.name);
   });
 
   const renamed = new Map();
@@ -787,15 +803,17 @@ function main(config) {
   const providers = {};
   for (const def of providerDefs) {
     const name = def[0];
-    const behavior = def[1] === 'i' ? 'ipcidr' : 'domain';
-    const base = def[2] === 'L' ? LAN : META;
+    const behavior = def[1] === 'i' ? 'ipcidr' : def[1] === 'c' ? 'classical' : 'domain';
+    const format = def[4] || 'mrs';
+    const base = def[2] === 'L' ? LAN : def[2] === 'U' ? '' : META;
+    const ext = format === 'mrs' ? 'mrs' : format === 'yaml' ? 'yaml' : 'txt';
     providers[name] = {
       type: 'http',
-      format: 'mrs',
-      behavior,
+      format: format,
+      behavior: behavior,
       interval: 86400,
       url: base + def[3],
-      path: `./ruleset/${behavior === 'ipcidr' ? 'ip_' : ''}${name}.mrs`,
+      path: `./ruleset/${behavior === 'ipcidr' ? 'ip_' : ''}${name}.${ext}`,
     };
   }
 

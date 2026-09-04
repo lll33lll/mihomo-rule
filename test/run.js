@@ -1,13 +1,19 @@
 'use strict';
 /**
- * 覆写脚本自检：在沙箱里跑 main()，校验产出的配置自身是否自洽。
+ * 覆写脚本自检：在沙箱里跑 main()，校验产出的配置自身是否自洽，
+ * 并与 test/upstream-snapshot.yaml（上游 configfull.yaml 的快照）逐项对齐。
+ *
+ * 期望值一律从快照现算，不写死数字，这样同步上游后自检会跟着变，
+ * 只有「脚本没跟上快照」才会报错。
  * 用法：node test/run.js
  */
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const up = require('../tools/upstream.js');
 
 const SCRIPT = path.resolve(__dirname, '..', 'Script', 'override.js');
+const SNAPSHOT = path.resolve(__dirname, 'upstream-snapshot.yaml');
 
 let pass = 0;
 let fail = 0;
@@ -23,6 +29,19 @@ function t(name, fn) {
 }
 function ok(cond, msg) {
   if (!cond) throw new Error(msg || '断言失败');
+}
+
+/** 只提醒、不算失败：上游正常演进就可能触发的非致命问题 */
+let warns = 0;
+function w(name, fn) {
+  try {
+    fn();
+    pass++;
+    console.log(`  ✓ ${name}`);
+  } catch (e) {
+    warns++;
+    console.log(`  ! ${name}\n      ${e.message}`);
+  }
 }
 
 function load(transform) {
@@ -67,6 +86,8 @@ const BUILTIN = new Set(['DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'COMPATIBLE'
 console.log('\n覆写脚本自检\n');
 
 const api = load();
+/** 上游快照的解析结果（含本地差异），作为一切「与上游一致」断言的期望值 */
+const SNAP = up.applyLocalPatch(up.parse(fs.readFileSync(SNAPSHOT, 'utf8')));
 const cfg = api.main(fixture());
 const groupNames = cfg['proxy-groups'].map((g) => g.name);
 const proxyNames = cfg.proxies.map((p) => p.name);
@@ -78,12 +99,79 @@ t('返回对象包含核心字段', () => {
     ok(cfg[k] !== undefined, `缺少 ${k}`);
   }
 });
-t('规则条数与上游一致（96 条）', () => ok(cfg.rules.length === 96, `实际 ${cfg.rules.length} 条`));
-t('规则集数量 >= 90', () => ok(Object.keys(cfg['rule-providers']).length >= 90));
+t('规则条数与上游快照一致', () =>
+  ok(cfg.rules.length === SNAP.ruleList.length, `脚本 ${cfg.rules.length} 条，快照 ${SNAP.ruleList.length} 条`));
+t('规则集数量与上游快照一致', () =>
+  ok(
+    Object.keys(cfg['rule-providers']).length === SNAP.providerDefs.length,
+    `脚本 ${Object.keys(cfg['rule-providers']).length} 个，快照 ${SNAP.providerDefs.length} 个`,
+  ));
 t('最后一条是 MATCH,Final', () => ok(cfg.rules[cfg.rules.length - 1] === 'MATCH,Final'));
 t('机场自带的组和规则已被丢弃', () => {
   ok(!groupNames.some((n) => n === '机场自带组'));
   ok(!cfg.rules.some((r) => r.indexOf('机场自带组') >= 0));
+});
+
+console.log('\n  ▸ 与上游快照 1:1 对齐');
+t('快照本身通过完整性校验', () => {
+  const errs = up.validate(SNAP);
+  ok(errs.length === 0, errs.join('; '));
+});
+t('规则集定义与快照逐条一致', () => {
+  const BEH = { d: 'domain', i: 'ipcidr', c: 'classical' };
+  ok(
+    api.providerDefs.length === SNAP.providerDefs.length,
+    `脚本 ${api.providerDefs.length} 个 / 快照 ${SNAP.providerDefs.length} 个`,
+  );
+  for (let i = 0; i < SNAP.providerDefs.length; i++) {
+    const s = SNAP.providerDefs[i];
+    const d = api.providerDefs[i];
+    ok(d[0] === s.name, `第 ${i + 1} 个：${d[0]} ≠ ${s.name}`);
+    ok(BEH[d[1]] === s.behavior, `${s.name} 的 behavior 不一致`);
+    ok(d[2] === s.tag, `${s.name} 的前缀不一致`);
+    ok(d[3] === s.path, `${s.name} 的路径不一致`);
+    ok((d[4] || 'mrs') === s.format, `${s.name} 的格式不一致`);
+  }
+});
+t('规则集 URL 拼回去与上游原始 URL 等价', () => {
+  // 上游同一份文件有 refs/heads 与短写两种写法，归一化后再比
+  const norm = (u) =>
+    String(u)
+      .replace('https://github.com/', 'https://raw.githubusercontent.com/')
+      .replace('/raw/refs/heads/', '/')
+      .replace('/raw/', '/')
+      .replace('/refs/heads/', '/');
+  for (const s of SNAP.providerDefs) {
+    const mine = cfg['rule-providers'][s.name];
+    ok(!!mine, `缺少规则集 ${s.name}`);
+    ok(norm(mine.url) === norm(s.url), `${s.name}\n        脚本 ${mine.url}\n        上游 ${s.url}`);
+  }
+});
+t('路由规则与快照逐条一致', () => {
+  ok(api.ruleList.length === SNAP.ruleList.length, `脚本 ${api.ruleList.length} 条 / 快照 ${SNAP.ruleList.length} 条`);
+  for (let i = 0; i < SNAP.ruleList.length; i++) {
+    ok(api.ruleList[i] === SNAP.ruleList[i], `第 ${i + 1} 条：\n        ${api.ruleList[i]}\n        ${SNAP.ruleList[i]}`);
+  }
+});
+t('fake-ip 白名单与快照一致', () => {
+  ok(api.fakeIpSets.join(',') === SNAP.fakeIpSets.join(','), `\n      脚本 ${api.fakeIpSets.join(',')}\n      快照 ${SNAP.fakeIpSets.join(',')}`);
+});
+t('分流组划分与快照一致（含本地差异）', () => {
+  ok(api.groupDefs.length === SNAP.groupDefs.length, `脚本 ${api.groupDefs.length} 个 / 快照 ${SNAP.groupDefs.length} 个`);
+  for (let i = 0; i < SNAP.groupDefs.length; i++) {
+    const s = SNAP.groupDefs[i];
+    const d = api.groupDefs[i];
+    const key = (g) => JSON.stringify({ name: g.name, tpl: g.tpl, fixed: g.fixed, prefer: g.prefer, icon: g.icon });
+    ok(key(d) === key(s), `第 ${i + 1} 个：\n        ${key(d)}\n        ${key(s)}`);
+  }
+});
+t('上游的节点/功能组都由脚本动态生成，没有漏', () => {
+  // 快照里被判为「动态」的组，除地区相关的以外都应该真的出现在产物里
+  const skip = new Set(SNAP.upstreamRegions.map((r) => r.name));
+  for (const n of SNAP.dynamicGroups) {
+    if (skip.has(n) || /自动$|均衡$/.test(n)) continue;
+    ok(groupNames.indexOf(n) >= 0, `缺少动态组 ${n}`);
+  }
 });
 
 console.log('\n  ▸ 分流规则与上游 configfull.yaml 对齐');
@@ -91,16 +179,20 @@ t('规则顺序与上游逐条一致', () => {
   ok(cfg.rules.length === api.ruleList.length, '条数不一致');
   for (let i = 0; i < api.ruleList.length; i++) ok(cfg.rules[i] === api.ruleList[i], `第 ${i + 1} 条不一致`);
 });
-t('广告拦截排在最前，兜底排在最后', () => {
-  ok(cfg.rules[0] === 'RULE-SET,banAd_domain,隐私拦截');
-  const tail = cfg.rules.slice(-5);
-  ok(tail[0] === 'RULE-SET,geolocation-!cn,节点选择');
-  ok(tail[1] === 'RULE-SET,cn_domain,全球直连');
-  ok(tail[2] === 'RULE-SET,private_ip,全球直连,no-resolve');
-  ok(tail[3] === 'RULE-SET,cn_ip,全球直连,no-resolve');
+t('广告拦截排在最前，国内兜底与 MATCH 收尾', () => {
+  // 只校验语义顺序，不写死具体条目，免得上游微调就误报
+  ok(/^RULE-SET,banAd_domain,/.test(cfg.rules[0]), `首条是 ${cfg.rules[0]}`);
+  ok(/^MATCH,/.test(cfg.rules[cfg.rules.length - 1]), '末条不是 MATCH');
+  const at = (re) => cfg.rules.findIndex((r) => re.test(r));
+  const proxyFallback = at(/^RULE-SET,geolocation-!cn,/);
+  ok(proxyFallback > 0, '缺少 geolocation-!cn 兜底');
+  for (const re of [/^RULE-SET,cn_domain,全球直连/, /^RULE-SET,private_ip,全球直连/, /^RULE-SET,cn_ip,全球直连/]) {
+    const i = at(re);
+    ok(i > proxyFallback, `${re} 应排在代理兜底之后`);
+  }
 });
 t('国内直连规则排在代理兜底之前', () => {
-  const proxyFallback = cfg.rules.indexOf('RULE-SET,geolocation-!cn,节点选择');
+  const proxyFallback = cfg.rules.findIndex((r) => /^RULE-SET,geolocation-!cn,/.test(r));
   for (const k of ['direct_domain', 'wechat_domain', 'tencent_domain', 'alibaba_domain', 'apple_cn_domain']) {
     const at = cfg.rules.findIndex((r) => r.indexOf(`RULE-SET,${k},`) === 0);
     ok(at >= 0 && at < proxyFallback, `${k} 没有排在代理兜底之前`);
@@ -137,12 +229,45 @@ t('订阅节点补上 udp: true', () => {
 });
 
 console.log('\n  ▸ 地区组（动态生成）');
-t('四个地区组都在', () => {
+t('订阅里有的地区都生成了组', () => {
   for (const r of ['香港节点', '日本节点', '美国节点', '新加坡节点']) ok(groupNames.indexOf(r) >= 0, `缺 ${r}`);
 });
-t('未定义的地区（韩国/台湾）不会生成组', () => {
-  ok(groupNames.indexOf('韩国节点') < 0);
+t('没有对应节点的地区不生成组（台湾/欧洲）', () => {
   ok(groupNames.indexOf('台湾节点') < 0);
+  ok(groupNames.indexOf('欧洲节点') < 0);
+});
+t('regions 里没定义的地区（韩国）不会单独成组', () => {
+  ok(groupNames.indexOf('韩国节点') < 0);
+});
+t('台湾与欧洲节点能被识别，巴哈姆特随即优先台湾', () => {
+  const cfg2 = api.main({
+    proxies: [
+      { name: '🇭🇰 香港 01', type: 'ss', server: 'a', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+      { name: '台湾 台北 01', type: 'ss', server: 'b', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+      { name: 'TW-02 HiNet', type: 'ss', server: 'c', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+      { name: '德国 法兰克福', type: 'ss', server: 'd', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+      { name: '🇬🇧 London 01', type: 'ss', server: 'e', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+    ],
+  });
+  const g2 = cfg2['proxy-groups'];
+  const tw = g2.find((g) => g.name === '台湾节点');
+  const eu = g2.find((g) => g.name === '欧洲节点');
+  ok(!!tw && tw.proxies.length >= 3, '台湾组缺失或成员不足'); // 含自动/均衡子组
+  ok(!!eu, '欧洲组缺失');
+  ok(g2.find((g) => g.name === '巴哈姆特').proxies[0] === '台湾节点', '巴哈姆特首项应为台湾节点');
+  ok(!g2.some((g) => g.name === '其他节点'), '这批节点应该都能归类');
+});
+t('流量单位 GB / 到期信息不会被当成节点', () => {
+  const cfg3 = api.main({
+    proxies: [
+      { name: '🇭🇰 香港 01', type: 'ss', server: 'a', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+      { name: '剩余流量：188.88 GB', type: 'ss', server: 'x', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+      { name: '距离下次重置剩余：25 天', type: 'ss', server: 'y', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+      { name: '套餐到期：2026-12-31', type: 'ss', server: 'z', port: 1, cipher: 'aes-128-gcm', password: 'p' },
+    ],
+  });
+  ok(cfg3.proxies.filter((p) => p.type !== 'direct').length === 1, cfg3.proxies.map((p) => p.name).join(' | '));
+  ok(!cfg3['proxy-groups'].some((g) => g.name === '欧洲节点'), 'GB 被误判成英国');
 });
 t('未匹配地区的节点进入「其他节点」', () => {
   const g = cfg['proxy-groups'].find((x) => x.name === '其他节点');
@@ -203,7 +328,8 @@ t('fake-ip-filter 引用的 rule-set 都已定义', () => {
     for (const k of s.slice(9).split(',')) ok(def.has(k), `fake-ip 引用了未定义的 ${k}`);
   }
 });
-t('没有定义了却没人用的规则集', () => {
+w('没有定义了却没人用的规则集', () => {
+  // 上游偶尔会删了规则却留着定义，只是白下载一份，不影响分流，所以只提醒
   const used = new Set();
   for (const r of cfg.rules) for (const one of r.match(/RULE-SET,([^,)]+)/g) || []) used.add(one.split(',')[1]);
   for (const item of cfg.dns['fake-ip-filter']) {
@@ -220,12 +346,14 @@ t('策略组不重名', () => {
     seen.add(n);
   }
 });
-t('规则集 URL 全为 https 且指向 .mrs', () => {
+t('规则集 URL 全为 https，扩展名与 format 相符', () => {
+  const ext = { mrs: /\.mrs$/, yaml: /\.(ya?ml)$/, text: /\.(txt|list|conf)$/ };
   for (const k of Object.keys(cfg['rule-providers'])) {
     const p = cfg['rule-providers'][k];
     ok(/^https:\/\//.test(p.url), `${k} 非 https`);
-    ok(/\.mrs$/.test(p.url), `${k} 不是 mrs`);
-    ok(p.format === 'mrs' && p.type === 'http');
+    ok(p.type === 'http', `${k} 不是 http 类型`);
+    ok(ext[p.format] !== undefined, `${k} 的 format=${p.format} 不认识`);
+    ok(ext[p.format].test(p.url), `${k} 的 URL 与 format=${p.format} 不符：${p.url}`);
   }
 });
 t('上游定义的分流组一个都不少', () => {
@@ -400,5 +528,5 @@ t('main 是唯一入口且接收 config', () => {
   ok(/function main\(config\)/.test(fs.readFileSync(SCRIPT, 'utf8')));
 });
 
-console.log(`\n结果：${pass} 通过，${fail} 失败\n`);
+console.log(`\n结果：${pass} 通过，${fail} 失败${warns ? `，${warns} 提醒` : ''}\n`);
 process.exit(fail ? 1 : 0);

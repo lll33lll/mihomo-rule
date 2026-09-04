@@ -120,6 +120,13 @@ hosts:
 
 # --- 规则集：mrs 二进制格式，按需下载，内存占用远低于 geodata ---
 rule-providers:
+  banAd_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/banAd_mini.mrs'
+    path: ./ruleset/banAd_domain.mrs
   private_domain:
     type: http
     format: mrs
@@ -127,20 +134,6 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs'
     path: ./ruleset/private_domain.mrs
-  cn_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs'
-    path: ./ruleset/cn_domain.mrs
-  direct_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/direct.mrs'
-    path: ./ruleset/direct_domain.mrs
   bank_cn_domain:
     type: http
     format: mrs
@@ -148,55 +141,6 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-bank-cn.mrs'
     path: ./ruleset/bank_cn_domain.mrs
-  ai_cn_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-cn.mrs'
-    path: ./ruleset/ai_cn_domain.mrs
-  alibaba_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/alibaba.mrs'
-    path: ./ruleset/alibaba_domain.mrs
-  aliyun_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/aliyun.mrs'
-    path: ./ruleset/aliyun_domain.mrs
-  115_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/115.mrs'
-    path: ./ruleset/115_domain.mrs
-  tencent_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tencent.mrs'
-    path: ./ruleset/tencent_domain.mrs
-  'tencent!cn_domain':
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tencent%40!cn.mrs'
-    path: './ruleset/tencent!cn_domain.mrs'
-  wechat_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/WeChat.mrs'
-    path: ./ruleset/wechat_domain.mrs
   xiaomi_domain:
     type: http
     format: mrs
@@ -204,27 +148,34 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/xiaomi.mrs'
     path: ./ruleset/xiaomi_domain.mrs
-  iptv_domain:
+  biliintl_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/iptv.mrs'
-    path: ./ruleset/iptv_domain.mrs
-  ifast_domain:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili%40!cn.mrs'
+    path: ./ruleset/biliintl_domain.mrs
+  bilibili_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ifast.mrs'
-    path: ./ruleset/ifast_domain.mrs
-  game_cn_domain:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.mrs'
+    path: ./ruleset/bilibili_domain.mrs
+  bahamut_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games%40cn.mrs'
-    path: ./ruleset/game_cn_domain.mrs
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bahamut.mrs'
+    path: ./ruleset/bahamut_domain.mrs
+  spotify_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs'
+    path: ./ruleset/spotify_domain.mrs
   steam_cn_domain:
     type: http
     format: mrs
@@ -239,139 +190,27 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/Steam-domain.mrs'
     path: ./ruleset/steamcdn_domain.mrs
-  NetEaseMusic_domain:
+  steam_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/NetEaseMusic-domain.mrs'
-    path: ./ruleset/NetEaseMusic_domain.mrs
-  apple_cn_domain:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs'
+    path: ./ruleset/steam_domain.mrs
+  'ai!cn_domain':
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple%40cn.mrs'
-    path: ./ruleset/apple_cn_domain.mrs
-  media_cn_domain:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs'
+    path: './ruleset/ai!cn_domain.mrs'
+  openai_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-media-cn.mrs'
-    path: ./ruleset/media_cn_domain.mrs
-  fakeip_filter_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/fakeip-filter.mrs'
-    path: ./ruleset/fakeip_filter_domain.mrs
-  banAd_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/banAd_mini.mrs'
-    path: ./ruleset/banAd_domain.mrs
-  proxy_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/proxy.mrs'
-    path: ./ruleset/proxy_domain.mrs
-  gfw_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs'
-    path: ./ruleset/gfw_domain.mrs
-  'geolocation-!cn':
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs'
-    path: './ruleset/geolocation-!cn.mrs'
-  Cloudflare_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cloudflare.mrs'
-    path: ./ruleset/Cloudflare_domain.mrs
-  pikpak_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/pikpak.mrs'
-    path: ./ruleset/pikpak_domain.mrs
-  speedtest_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ookla-speedtest.mrs'
-    path: ./ruleset/speedtest_domain.mrs
-  Wise_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/wise.mrs'
-    path: ./ruleset/Wise_domain.mrs
-  paypal_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/paypal.mrs'
-    path: ./ruleset/paypal_domain.mrs
-  bilibili_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili.mrs'
-    path: ./ruleset/bilibili_domain.mrs
-  biliintl_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bilibili%40!cn.mrs'
-    path: ./ruleset/biliintl_domain.mrs
-  bahamut_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bahamut.mrs'
-    path: ./ruleset/bahamut_domain.mrs
-  github_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs'
-    path: ./ruleset/github_domain.mrs
-  gitbook_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gitbook.mrs'
-    path: ./ruleset/gitbook_domain.mrs
-  googlevpn_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/googleVPN.mrs'
-    path: ./ruleset/googlevpn_domain.mrs
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs'
+    path: ./ruleset/openai_domain.mrs
   youtube_domain:
     type: http
     format: mrs
@@ -379,13 +218,6 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs'
     path: ./ruleset/youtube_domain.mrs
-  fcm_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/googlefcm.mrs'
-    path: ./ruleset/fcm_domain.mrs
   google_domain:
     type: http
     format: mrs
@@ -393,6 +225,34 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/google.mrs'
     path: ./ruleset/google_domain.mrs
+  github_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs'
+    path: ./ruleset/github_domain.mrs
+  telegram_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs'
+    path: ./ruleset/telegram_domain.mrs
+  netflix_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs'
+    path: ./ruleset/netflix_domain.mrs
+  paypal_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/paypal.mrs'
+    path: ./ruleset/paypal_domain.mrs
   onedrive_domain:
     type: http
     format: mrs
@@ -407,69 +267,6 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs'
     path: ./ruleset/microsoft_domain.mrs
-  'ai!cn_domain':
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs'
-    path: './ruleset/ai!cn_domain.mrs'
-  ai_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/ai.mrs'
-    path: ./ruleset/ai_domain.mrs
-  openai_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs'
-    path: ./ruleset/openai_domain.mrs
-  telegram_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs'
-    path: ./ruleset/telegram_domain.mrs
-  line_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/line.mrs'
-    path: ./ruleset/line_domain.mrs
-  talkatone_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/Talkatone-domain.mrs'
-    path: ./ruleset/talkatone_domain.mrs
-  discord_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/discord.mrs'
-    path: ./ruleset/discord_domain.mrs
-  signal_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/signal.mrs'
-    path: ./ruleset/signal_domain.mrs
-  appleTV_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/appletv.mrs'
-    path: ./ruleset/appleTV_domain.mrs
   apple_firmware_domain:
     type: http
     format: mrs
@@ -484,6 +281,13 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs'
     path: ./ruleset/apple_domain.mrs
+  speedtest_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ookla-speedtest.mrs'
+    path: ./ruleset/speedtest_domain.mrs
   tiktok_domain:
     type: http
     format: mrs
@@ -491,13 +295,55 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs'
     path: ./ruleset/tiktok_domain.mrs
-  netflix_domain:
+  gfw_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs'
-    path: ./ruleset/netflix_domain.mrs
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs'
+    path: ./ruleset/gfw_domain.mrs
+  'geolocation-!cn':
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs'
+    path: './ruleset/geolocation-!cn.mrs'
+  cn_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs'
+    path: ./ruleset/cn_domain.mrs
+  media_cn_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-media-cn.mrs'
+    path: ./ruleset/media_cn_domain.mrs
+  'media!cn_domain':
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-social-media-!cn.mrs'
+    path: './ruleset/media!cn_domain.mrs'
+  Cloudflare_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cloudflare.mrs'
+    path: ./ruleset/Cloudflare_domain.mrs
+  gitbook_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gitbook.mrs'
+    path: ./ruleset/gitbook_domain.mrs
   disney_domain:
     type: http
     format: mrs
@@ -519,90 +365,41 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/primevideo.mrs'
     path: ./ruleset/primevideo_domain.mrs
-  emby_domain:
+  NetEaseMusic_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/emby.mrs'
-    path: ./ruleset/emby_domain.mrs
-  spotify_domain:
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/NetEaseMusic-domain.mrs'
+    path: ./ruleset/NetEaseMusic_domain.mrs
+  Amazon_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs'
-    path: ./ruleset/spotify_domain.mrs
-  twitch_domain:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/amazon.mrs'
+    path: ./ruleset/Amazon_domain.mrs
+  Shopee_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitch.mrs'
-    path: ./ruleset/twitch_domain.mrs
-  porn_domain:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/shopee.mrs'
+    path: ./ruleset/Shopee_domain.mrs
+  ebay_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-porn.mrs'
-    path: ./ruleset/porn_domain.mrs
-  TVB_domain:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ebay.mrs'
+    path: ./ruleset/ebay_domain.mrs
+  appleTV_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/tvb.mrs'
-    path: ./ruleset/TVB_domain.mrs
-  'media!cn_domain':
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-social-media-!cn.mrs'
-    path: './ruleset/media!cn_domain.mrs'
-  facebook_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/facebook.mrs'
-    path: ./ruleset/facebook_domain.mrs
-  whatsapp_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/whatsapp.mrs'
-    path: ./ruleset/whatsapp_domain.mrs
-  instagram_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/instagram.mrs'
-    path: ./ruleset/instagram_domain.mrs
-  threads_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/threads.mrs'
-    path: ./ruleset/threads_domain.mrs
-  meta_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/meta.mrs'
-    path: ./ruleset/meta_domain.mrs
-  steam_domain:
-    type: http
-    format: mrs
-    behavior: domain
-    interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs'
-    path: ./ruleset/steam_domain.mrs
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/appletv.mrs'
+    path: ./ruleset/appleTV_domain.mrs
   Epic_domain:
     type: http
     format: mrs
@@ -645,20 +442,69 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/nintendo.mrs'
     path: ./ruleset/Nintendo_domain.mrs
-  Amazon_domain:
+  facebook_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/amazon.mrs'
-    path: ./ruleset/Amazon_domain.mrs
-  Shopee_domain:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/facebook.mrs'
+    path: ./ruleset/facebook_domain.mrs
+  whatsapp_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/shopee.mrs'
-    path: ./ruleset/Shopee_domain.mrs
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/whatsapp.mrs'
+    path: ./ruleset/whatsapp_domain.mrs
+  instagram_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/instagram.mrs'
+    path: ./ruleset/instagram_domain.mrs
+  threads_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/threads.mrs'
+    path: ./ruleset/threads_domain.mrs
+  meta_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/meta.mrs'
+    path: ./ruleset/meta_domain.mrs
+  Wise_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/wise.mrs'
+    path: ./ruleset/Wise_domain.mrs
+  ifast_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ifast.mrs'
+    path: ./ruleset/ifast_domain.mrs
+  line_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/line.mrs'
+    path: ./ruleset/line_domain.mrs
+  talkatone_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/Talkatone-domain.mrs'
+    path: ./ruleset/talkatone_domain.mrs
   Shopify_domain:
     type: http
     format: mrs
@@ -666,27 +512,167 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/shopify.mrs'
     path: ./ruleset/Shopify_domain.mrs
-  ebay_domain:
+  signal_domain:
     type: http
     format: mrs
     behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ebay.mrs'
-    path: ./ruleset/ebay_domain.mrs
-  private_ip:
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/signal.mrs'
+    path: ./ruleset/signal_domain.mrs
+  wechat_domain:
     type: http
     format: mrs
-    behavior: ipcidr
+    behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs'
-    path: ./ruleset/ip_private_ip.mrs
-  cn_ip:
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/WeChat.mrs'
+    path: ./ruleset/wechat_domain.mrs
+  proxy_domain:
     type: http
     format: mrs
-    behavior: ipcidr
+    behavior: domain
     interval: 86400
-    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs'
-    path: ./ruleset/ip_cn_ip.mrs
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/proxy.mrs'
+    path: ./ruleset/proxy_domain.mrs
+  direct_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/direct.mrs'
+    path: ./ruleset/direct_domain.mrs
+  apple_cn_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple%40cn.mrs'
+    path: ./ruleset/apple_cn_domain.mrs
+  alibaba_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/alibaba.mrs'
+    path: ./ruleset/alibaba_domain.mrs
+  'tencent!cn_domain':
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tencent%40!cn.mrs'
+    path: './ruleset/tencent!cn_domain.mrs'
+  tencent_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tencent.mrs'
+    path: ./ruleset/tencent_domain.mrs
+  ai_cn_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-cn.mrs'
+    path: ./ruleset/ai_cn_domain.mrs
+  discord_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/discord.mrs'
+    path: ./ruleset/discord_domain.mrs
+  fcm_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/googlefcm.mrs'
+    path: ./ruleset/fcm_domain.mrs
+  emby_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/emby.mrs'
+    path: ./ruleset/emby_domain.mrs
+  115_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/115.mrs'
+    path: ./ruleset/115_domain.mrs
+  aliyun_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/aliyun.mrs'
+    path: ./ruleset/aliyun_domain.mrs
+  twitch_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitch.mrs'
+    path: ./ruleset/twitch_domain.mrs
+  porn_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-porn.mrs'
+    path: ./ruleset/porn_domain.mrs
+  iptv_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/iptv.mrs'
+    path: ./ruleset/iptv_domain.mrs
+  googlevpn_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/googleVPN.mrs'
+    path: ./ruleset/googlevpn_domain.mrs
+  ai_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/ai.mrs'
+    path: ./ruleset/ai_domain.mrs
+  TVB_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/tvb.mrs'
+    path: ./ruleset/TVB_domain.mrs
+  game_cn_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games%40cn.mrs'
+    path: ./ruleset/game_cn_domain.mrs
+  fakeip_filter_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/Domain/fakeip-filter.mrs'
+    path: ./ruleset/fakeip_filter_domain.mrs
+  pikpak_domain:
+    type: http
+    format: mrs
+    behavior: domain
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/pikpak.mrs'
+    path: ./ruleset/pikpak_domain.mrs
   bilibili_ip:
     type: http
     format: mrs
@@ -694,6 +680,13 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo-lite/geoip/bilibili.mrs'
     path: ./ruleset/ip_bilibili_ip.mrs
+  cn_ip:
+    type: http
+    format: mrs
+    behavior: ipcidr
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs'
+    path: ./ruleset/ip_cn_ip.mrs
   google_ip:
     type: http
     format: mrs
@@ -715,6 +708,13 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/netflix.mrs'
     path: ./ruleset/ip_netflix_ip.mrs
+  Amazon_ip:
+    type: http
+    format: mrs
+    behavior: ipcidr
+    interval: 86400
+    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/IP/amazon-ip.mrs'
+    path: ./ruleset/ip_Amazon_ip.mrs
   facebook_ip:
     type: http
     format: mrs
@@ -729,13 +729,13 @@ rule-providers:
     interval: 86400
     url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/twitter.mrs'
     path: ./ruleset/ip_twitter_ip.mrs
-  Amazon_ip:
+  private_ip:
     type: http
     format: mrs
     behavior: ipcidr
     interval: 86400
-    url: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/rules/IP/amazon-ip.mrs'
-    path: ./ruleset/ip_Amazon_ip.mrs
+    url: 'https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs'
+    path: ./ruleset/ip_private_ip.mrs
   talkatone_ip:
     type: http
     format: mrs
@@ -836,15 +836,21 @@ proxy-groups:
       - 香港节点自动
       - 香港节点均衡
       - 香港节点
-      - 日本节点自动
-      - 日本节点均衡
-      - 日本节点
-      - 美国节点自动
-      - 美国节点均衡
-      - 美国节点
       - 新加坡节点自动
       - 新加坡节点均衡
       - 新加坡节点
+      - 日本节点自动
+      - 日本节点均衡
+      - 日本节点
+      - 台湾节点自动
+      - 台湾节点均衡
+      - 台湾节点
+      - 美国节点自动
+      - 美国节点均衡
+      - 美国节点
+      - 欧洲节点自动
+      - 欧洲节点均衡
+      - 欧洲节点
       - 其他节点自动
       - 其他节点均衡
       - 其他节点
@@ -858,7 +864,7 @@ proxy-groups:
     type: select
     name: 节点选择
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/select.png'
-    proxies: [香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 故障转移]
+    proxies: [香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 故障转移]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -867,7 +873,7 @@ proxy-groups:
     type: select
     name: YouTube
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/youtube.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -876,7 +882,7 @@ proxy-groups:
     type: select
     name: FCM
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/fcm.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -885,7 +891,7 @@ proxy-groups:
     type: select
     name: GoogleVPN
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/googlevpn.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -894,7 +900,7 @@ proxy-groups:
     type: select
     name: Google
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/google.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -903,7 +909,7 @@ proxy-groups:
     type: select
     name: Meta
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/meta.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -912,7 +918,7 @@ proxy-groups:
     type: select
     name: AI
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/ai.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
@@ -924,7 +930,7 @@ proxy-groups:
     type: select
     name: GitHub
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/github.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -933,7 +939,7 @@ proxy-groups:
     type: select
     name: OneDrive
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/onedrive.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -942,7 +948,7 @@ proxy-groups:
     type: select
     name: Microsoft
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/microsoft.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -951,7 +957,7 @@ proxy-groups:
     type: select
     name: Telegram
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/telegram.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -960,7 +966,7 @@ proxy-groups:
     type: select
     name: Discord
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/discord.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -969,7 +975,7 @@ proxy-groups:
     type: select
     name: Talkatone
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/talkatone.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -978,7 +984,7 @@ proxy-groups:
     type: select
     name: LINE
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/line.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -987,7 +993,7 @@ proxy-groups:
     type: select
     name: Signal
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/signal.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -996,7 +1002,7 @@ proxy-groups:
     type: select
     name: TikTok
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/tiktok.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1005,7 +1011,7 @@ proxy-groups:
     type: select
     name: NETFLIX
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/netflix.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1014,7 +1020,7 @@ proxy-groups:
     type: select
     name: DisneyPlus
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/disney.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1023,7 +1029,7 @@ proxy-groups:
     type: select
     name: HBO
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/hbo.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1032,7 +1038,7 @@ proxy-groups:
     type: select
     name: Primevideo
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/primevideo.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1041,7 +1047,7 @@ proxy-groups:
     type: select
     name: AppleTV
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/appletv.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1050,7 +1056,7 @@ proxy-groups:
     type: select
     name: Apple
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/apple.png'
-    proxies: [全球直连, 节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点]
+    proxies: [全球直连, 节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1059,7 +1065,7 @@ proxy-groups:
     type: select
     name: Emby
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/emby.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
@@ -1071,7 +1077,7 @@ proxy-groups:
     type: select
     name: 哔哩哔哩
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/bilibili.png'
-    proxies: [全球直连, 节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点]
+    proxies: [全球直连, 节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1080,7 +1086,7 @@ proxy-groups:
     type: select
     name: 哔哩东南亚
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/bilibilit.png'
-    proxies: [新加坡节点, 节点选择, 香港节点, 日本节点, 美国节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [新加坡节点, 节点选择, 香港节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1089,7 +1095,7 @@ proxy-groups:
     type: select
     name: 巴哈姆特
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/bahamut.png'
-    proxies: [香港节点, 节点选择, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [台湾节点, 香港节点, 节点选择, 新加坡节点, 日本节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1098,7 +1104,7 @@ proxy-groups:
     type: select
     name: Spotify
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/spotify.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1107,7 +1113,7 @@ proxy-groups:
     type: select
     name: 国内媒体
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/Chinese_media.png'
-    proxies: [全球直连, 节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点]
+    proxies: [全球直连, 节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1116,7 +1122,7 @@ proxy-groups:
     type: select
     name: Global-TV
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/global_tv.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
@@ -1128,7 +1134,7 @@ proxy-groups:
     type: select
     name: Global-Medial
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/global_media.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
@@ -1140,7 +1146,7 @@ proxy-groups:
     type: select
     name: 游戏平台
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/game.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1149,7 +1155,7 @@ proxy-groups:
     type: select
     name: Speedtest
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/speedtest.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
@@ -1161,7 +1167,7 @@ proxy-groups:
     type: select
     name: PayPal
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/paypal.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1170,7 +1176,7 @@ proxy-groups:
     type: select
     name: Wise
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/wise.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1179,7 +1185,7 @@ proxy-groups:
     type: select
     name: 国外电商
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/shopping.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
     timeout: 5000
@@ -1188,7 +1194,7 @@ proxy-groups:
     type: select
     name: STEAM
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/steam.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
@@ -1218,7 +1224,7 @@ proxy-groups:
     type: select
     name: Final
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/final.png'
-    proxies: [节点选择, 香港节点, 日本节点, 美国节点, 新加坡节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
+    proxies: [节点选择, 香港节点, 新加坡节点, 日本节点, 台湾节点, 美国节点, 欧洲节点, 其他节点, 全部节点, 自建/家宽节点, 全球直连]
     include-all: true
     exclude-type: DIRECT
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
@@ -1316,6 +1322,51 @@ proxy-groups:
     tolerance: 20
     exclude-type: DIRECT
     hidden: true
+    name: 新加坡节点自动
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/Singapore.png'
+    include-all: true
+    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    empty-fallback: REJECT
+  - url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: load-balance
+    strategy: consistent-hashing
+    exclude-type: DIRECT
+    hidden: true
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/load-balance.png'
+    name: 新加坡节点均衡
+    include-all: true
+    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    empty-fallback: REJECT
+  - url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: select
+    name: 新加坡节点
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/Singapore.png'
+    proxies: [新加坡节点自动, 新加坡节点均衡]
+    hidden: false
+    include-all: true
+    exclude-type: DIRECT
+    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    empty-fallback: REJECT
+  - url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: url-test
+    tolerance: 20
+    exclude-type: DIRECT
+    hidden: true
     name: 日本节点自动
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/Japan.png'
     include-all: true
@@ -1350,6 +1401,51 @@ proxy-groups:
     include-all: true
     exclude-type: DIRECT
     filter: '🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    empty-fallback: REJECT
+  - url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: url-test
+    tolerance: 20
+    exclude-type: DIRECT
+    hidden: true
+    name: 台湾节点自动
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/Taiwan_China.png'
+    include-all: true
+    filter: '🇹🇼|台湾|台灣|台北|台中|台南|新北|彰化|(?<![A-Za-z])TW(?![A-Za-z])|taiwan|taipei'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    empty-fallback: REJECT
+  - url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: load-balance
+    strategy: consistent-hashing
+    exclude-type: DIRECT
+    hidden: true
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/load-balance.png'
+    name: 台湾节点均衡
+    include-all: true
+    filter: '🇹🇼|台湾|台灣|台北|台中|台南|新北|彰化|(?<![A-Za-z])TW(?![A-Za-z])|taiwan|taipei'
+    exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    empty-fallback: REJECT
+  - url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    timeout: 5000
+    lazy: true
+    max-failed-times: 5
+    type: select
+    name: 台湾节点
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/Taiwan_China.png'
+    proxies: [台湾节点自动, 台湾节点均衡]
+    hidden: false
+    include-all: true
+    exclude-type: DIRECT
+    filter: '🇹🇼|台湾|台灣|台北|台中|台南|新北|彰化|(?<![A-Za-z])TW(?![A-Za-z])|taiwan|taipei'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
     empty-fallback: REJECT
   - url: 'http://www.gstatic.com/generate_204'
@@ -1406,10 +1502,10 @@ proxy-groups:
     tolerance: 20
     exclude-type: DIRECT
     hidden: true
-    name: 新加坡节点自动
-    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/Singapore.png'
+    name: 欧洲节点自动
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/European.png'
     include-all: true
-    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    filter: '🇪🇺|🇬🇧|🇩🇪|🇫🇷|🇳🇱|🇷🇺|🇹🇷|🇮🇹|🇪🇸|🇸🇪|🇨🇭|🇵🇱|🇦🇹|🇧🇪|🇩🇰|🇫🇮|🇳🇴|🇮🇪|🇵🇹|🇨🇿|🇭🇺|🇷🇴|🇬🇷|🇧🇬|🇭🇷|🇸🇰|🇸🇮|🇱🇹|🇱🇻|🇪🇪|🇱🇺|🇲🇹|🇨🇾|🇮🇸|🇷🇸|🇺🇦|🇧🇾|🇲🇩|🇦🇱|🇲🇰|🇧🇦|🇲🇪|🇲🇨|🇱🇮|🇸🇲|🇦🇩|🇻🇦|欧洲|歐洲|英国|英國|伦敦|倫敦|德国|德國|法兰克福|法蘭克福|法国|法國|巴黎|荷兰|荷蘭|阿姆斯特丹|俄罗斯|俄羅斯|莫斯科|圣彼得堡|土耳其|伊斯坦布尔|意大利|米兰|米蘭|西班牙|马德里|馬德里|瑞典|斯德哥尔摩|瑞士|苏黎世|蘇黎世|波兰|波蘭|华沙|華沙|奥地利|奧地利|维也纳|維也納|比利时|比利時|丹麦|丹麥|芬兰|芬蘭|挪威|爱尔兰|愛爾蘭|都柏林|葡萄牙|里斯本|捷克|布拉格|匈牙利|布达佩斯|布達佩斯|罗马尼亚|羅馬尼亞|希腊|希臘|雅典|乌克兰|烏克蘭|(?<![A-Za-z])(?:UK|DEU|GBR|FRA|NLD|RUS|POL|TUR|ITA|ESP|SWE|CHE|AUT|BEL|DNK|FIN|NOR|IRL|PRT|CZE|HUN|ROU|GRC)(?![A-Za-z])|europe|london|germany|frankfurt|france|paris|netherlands|amsterdam|russia|moscow|turkey|istanbul|italy|milan|spain|madrid|sweden|stockholm|switzerland|zurich|poland|warsaw|austria|vienna|ireland|dublin|portugal|lisbon|czech|prague|hungary|budapest|romania|greece|athens|ukraine'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
     empty-fallback: REJECT
   - url: 'http://www.gstatic.com/generate_204'
@@ -1422,9 +1518,9 @@ proxy-groups:
     exclude-type: DIRECT
     hidden: true
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/load-balance.png'
-    name: 新加坡节点均衡
+    name: 欧洲节点均衡
     include-all: true
-    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    filter: '🇪🇺|🇬🇧|🇩🇪|🇫🇷|🇳🇱|🇷🇺|🇹🇷|🇮🇹|🇪🇸|🇸🇪|🇨🇭|🇵🇱|🇦🇹|🇧🇪|🇩🇰|🇫🇮|🇳🇴|🇮🇪|🇵🇹|🇨🇿|🇭🇺|🇷🇴|🇬🇷|🇧🇬|🇭🇷|🇸🇰|🇸🇮|🇱🇹|🇱🇻|🇪🇪|🇱🇺|🇲🇹|🇨🇾|🇮🇸|🇷🇸|🇺🇦|🇧🇾|🇲🇩|🇦🇱|🇲🇰|🇧🇦|🇲🇪|🇲🇨|🇱🇮|🇸🇲|🇦🇩|🇻🇦|欧洲|歐洲|英国|英國|伦敦|倫敦|德国|德國|法兰克福|法蘭克福|法国|法國|巴黎|荷兰|荷蘭|阿姆斯特丹|俄罗斯|俄羅斯|莫斯科|圣彼得堡|土耳其|伊斯坦布尔|意大利|米兰|米蘭|西班牙|马德里|馬德里|瑞典|斯德哥尔摩|瑞士|苏黎世|蘇黎世|波兰|波蘭|华沙|華沙|奥地利|奧地利|维也纳|維也納|比利时|比利時|丹麦|丹麥|芬兰|芬蘭|挪威|爱尔兰|愛爾蘭|都柏林|葡萄牙|里斯本|捷克|布拉格|匈牙利|布达佩斯|布達佩斯|罗马尼亚|羅馬尼亞|希腊|希臘|雅典|乌克兰|烏克蘭|(?<![A-Za-z])(?:UK|DEU|GBR|FRA|NLD|RUS|POL|TUR|ITA|ESP|SWE|CHE|AUT|BEL|DNK|FIN|NOR|IRL|PRT|CZE|HUN|ROU|GRC)(?![A-Za-z])|europe|london|germany|frankfurt|france|paris|netherlands|amsterdam|russia|moscow|turkey|istanbul|italy|milan|spain|madrid|sweden|stockholm|switzerland|zurich|poland|warsaw|austria|vienna|ireland|dublin|portugal|lisbon|czech|prague|hungary|budapest|romania|greece|athens|ukraine'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
     empty-fallback: REJECT
   - url: 'http://www.gstatic.com/generate_204'
@@ -1433,13 +1529,13 @@ proxy-groups:
     lazy: true
     max-failed-times: 5
     type: select
-    name: 新加坡节点
-    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/Singapore.png'
-    proxies: [新加坡节点自动, 新加坡节点均衡]
+    name: 欧洲节点
+    icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/European.png'
+    proxies: [欧洲节点自动, 欧洲节点均衡]
     hidden: false
     include-all: true
     exclude-type: DIRECT
-    filter: '🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore'
+    filter: '🇪🇺|🇬🇧|🇩🇪|🇫🇷|🇳🇱|🇷🇺|🇹🇷|🇮🇹|🇪🇸|🇸🇪|🇨🇭|🇵🇱|🇦🇹|🇧🇪|🇩🇰|🇫🇮|🇳🇴|🇮🇪|🇵🇹|🇨🇿|🇭🇺|🇷🇴|🇬🇷|🇧🇬|🇭🇷|🇸🇰|🇸🇮|🇱🇹|🇱🇻|🇪🇪|🇱🇺|🇲🇹|🇨🇾|🇮🇸|🇷🇸|🇺🇦|🇧🇾|🇲🇩|🇦🇱|🇲🇰|🇧🇦|🇲🇪|🇲🇨|🇱🇮|🇸🇲|🇦🇩|🇻🇦|欧洲|歐洲|英国|英國|伦敦|倫敦|德国|德國|法兰克福|法蘭克福|法国|法國|巴黎|荷兰|荷蘭|阿姆斯特丹|俄罗斯|俄羅斯|莫斯科|圣彼得堡|土耳其|伊斯坦布尔|意大利|米兰|米蘭|西班牙|马德里|馬德里|瑞典|斯德哥尔摩|瑞士|苏黎世|蘇黎世|波兰|波蘭|华沙|華沙|奥地利|奧地利|维也纳|維也納|比利时|比利時|丹麦|丹麥|芬兰|芬蘭|挪威|爱尔兰|愛爾蘭|都柏林|葡萄牙|里斯本|捷克|布拉格|匈牙利|布达佩斯|布達佩斯|罗马尼亚|羅馬尼亞|希腊|希臘|雅典|乌克兰|烏克蘭|(?<![A-Za-z])(?:UK|DEU|GBR|FRA|NLD|RUS|POL|TUR|ITA|ESP|SWE|CHE|AUT|BEL|DNK|FIN|NOR|IRL|PRT|CZE|HUN|ROU|GRC)(?![A-Za-z])|europe|london|germany|frankfurt|france|paris|netherlands|amsterdam|russia|moscow|turkey|istanbul|italy|milan|spain|madrid|sweden|stockholm|switzerland|zurich|poland|warsaw|austria|vienna|ireland|dublin|portugal|lisbon|czech|prague|hungary|budapest|romania|greece|athens|ukraine'
     exclude-filter: '群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
     empty-fallback: REJECT
   - url: 'http://www.gstatic.com/generate_204'
@@ -1454,7 +1550,7 @@ proxy-groups:
     name: 其他节点自动
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/all.png'
     include-all: true
-    exclude-filter: '🇭🇰|香港|港区|港區|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇺🇸|🇺🇲|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|los\s*angeles|ashburn|kansas|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    exclude-filter: '🇭🇰|香港|港区|港區|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇹🇼|台湾|台灣|台北|台中|台南|新北|彰化|(?<![A-Za-z])TW(?![A-Za-z])|taiwan|taipei|🇺🇸|🇺🇲|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|los\s*angeles|ashburn|kansas|🇪🇺|🇬🇧|🇩🇪|🇫🇷|🇳🇱|🇷🇺|🇹🇷|🇮🇹|🇪🇸|🇸🇪|🇨🇭|🇵🇱|🇦🇹|🇧🇪|🇩🇰|🇫🇮|🇳🇴|🇮🇪|🇵🇹|🇨🇿|🇭🇺|🇷🇴|🇬🇷|🇧🇬|🇭🇷|🇸🇰|🇸🇮|🇱🇹|🇱🇻|🇪🇪|🇱🇺|🇲🇹|🇨🇾|🇮🇸|🇷🇸|🇺🇦|🇧🇾|🇲🇩|🇦🇱|🇲🇰|🇧🇦|🇲🇪|🇲🇨|🇱🇮|🇸🇲|🇦🇩|🇻🇦|欧洲|歐洲|英国|英國|伦敦|倫敦|德国|德國|法兰克福|法蘭克福|法国|法國|巴黎|荷兰|荷蘭|阿姆斯特丹|俄罗斯|俄羅斯|莫斯科|圣彼得堡|土耳其|伊斯坦布尔|意大利|米兰|米蘭|西班牙|马德里|馬德里|瑞典|斯德哥尔摩|瑞士|苏黎世|蘇黎世|波兰|波蘭|华沙|華沙|奥地利|奧地利|维也纳|維也納|比利时|比利時|丹麦|丹麥|芬兰|芬蘭|挪威|爱尔兰|愛爾蘭|都柏林|葡萄牙|里斯本|捷克|布拉格|匈牙利|布达佩斯|布達佩斯|罗马尼亚|羅馬尼亞|希腊|希臘|雅典|乌克兰|烏克蘭|(?<![A-Za-z])(?:UK|DEU|GBR|FRA|NLD|RUS|POL|TUR|ITA|ESP|SWE|CHE|AUT|BEL|DNK|FIN|NOR|IRL|PRT|CZE|HUN|ROU|GRC)(?![A-Za-z])|europe|london|germany|frankfurt|france|paris|netherlands|amsterdam|russia|moscow|turkey|istanbul|italy|milan|spain|madrid|sweden|stockholm|switzerland|zurich|poland|warsaw|austria|vienna|ireland|dublin|portugal|lisbon|czech|prague|hungary|budapest|romania|greece|athens|ukraine|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
     empty-fallback: REJECT
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
@@ -1468,7 +1564,7 @@ proxy-groups:
     icon: 'https://raw.githubusercontent.com/Lanlan13-14/Rules/main/icon/load-balance.png'
     name: 其他节点均衡
     include-all: true
-    exclude-filter: '🇭🇰|香港|港区|港區|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇺🇸|🇺🇲|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|los\s*angeles|ashburn|kansas|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    exclude-filter: '🇭🇰|香港|港区|港區|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇹🇼|台湾|台灣|台北|台中|台南|新北|彰化|(?<![A-Za-z])TW(?![A-Za-z])|taiwan|taipei|🇺🇸|🇺🇲|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|los\s*angeles|ashburn|kansas|🇪🇺|🇬🇧|🇩🇪|🇫🇷|🇳🇱|🇷🇺|🇹🇷|🇮🇹|🇪🇸|🇸🇪|🇨🇭|🇵🇱|🇦🇹|🇧🇪|🇩🇰|🇫🇮|🇳🇴|🇮🇪|🇵🇹|🇨🇿|🇭🇺|🇷🇴|🇬🇷|🇧🇬|🇭🇷|🇸🇰|🇸🇮|🇱🇹|🇱🇻|🇪🇪|🇱🇺|🇲🇹|🇨🇾|🇮🇸|🇷🇸|🇺🇦|🇧🇾|🇲🇩|🇦🇱|🇲🇰|🇧🇦|🇲🇪|🇲🇨|🇱🇮|🇸🇲|🇦🇩|🇻🇦|欧洲|歐洲|英国|英國|伦敦|倫敦|德国|德國|法兰克福|法蘭克福|法国|法國|巴黎|荷兰|荷蘭|阿姆斯特丹|俄罗斯|俄羅斯|莫斯科|圣彼得堡|土耳其|伊斯坦布尔|意大利|米兰|米蘭|西班牙|马德里|馬德里|瑞典|斯德哥尔摩|瑞士|苏黎世|蘇黎世|波兰|波蘭|华沙|華沙|奥地利|奧地利|维也纳|維也納|比利时|比利時|丹麦|丹麥|芬兰|芬蘭|挪威|爱尔兰|愛爾蘭|都柏林|葡萄牙|里斯本|捷克|布拉格|匈牙利|布达佩斯|布達佩斯|罗马尼亚|羅馬尼亞|希腊|希臘|雅典|乌克兰|烏克蘭|(?<![A-Za-z])(?:UK|DEU|GBR|FRA|NLD|RUS|POL|TUR|ITA|ESP|SWE|CHE|AUT|BEL|DNK|FIN|NOR|IRL|PRT|CZE|HUN|ROU|GRC)(?![A-Za-z])|europe|london|germany|frankfurt|france|paris|netherlands|amsterdam|russia|moscow|turkey|istanbul|italy|milan|spain|madrid|sweden|stockholm|switzerland|zurich|poland|warsaw|austria|vienna|ireland|dublin|portugal|lisbon|czech|prague|hungary|budapest|romania|greece|athens|ukraine|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
     empty-fallback: REJECT
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
@@ -1482,7 +1578,7 @@ proxy-groups:
     hidden: false
     include-all: true
     exclude-type: DIRECT
-    exclude-filter: '🇭🇰|香港|港区|港區|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇺🇸|🇺🇲|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|los\s*angeles|ashburn|kansas|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
+    exclude-filter: '🇭🇰|香港|港区|港區|(?<![A-Za-z])HKG?(?![A-Za-z])|hong\s*kong|🇸🇬|新加坡|狮城|獅城|(?<![A-Za-z])SGP?(?![A-Za-z])|singapore|🇯🇵|日本|东京|東京|大阪|京都|埼玉|(?<![A-Za-z])JPN?(?![A-Za-z])|japan|tokyo|osaka|🇹🇼|台湾|台灣|台北|台中|台南|新北|彰化|(?<![A-Za-z])TW(?![A-Za-z])|taiwan|taipei|🇺🇸|🇺🇲|美国|美國|纽约|紐約|洛杉矶|洛杉磯|旧金山|舊金山|硅谷|芝加哥|休斯顿|迈阿密|邁阿密|西雅图|西雅圖|波士顿|波士頓|华盛顿|華盛頓|拉斯维加斯|圣何塞|聖何塞|圣地亚哥|达拉斯|凤凰城|阿什本|(?<![A-Za-z])USA?(?![A-Za-z])|america|united\s*states|los\s*angeles|ashburn|kansas|🇪🇺|🇬🇧|🇩🇪|🇫🇷|🇳🇱|🇷🇺|🇹🇷|🇮🇹|🇪🇸|🇸🇪|🇨🇭|🇵🇱|🇦🇹|🇧🇪|🇩🇰|🇫🇮|🇳🇴|🇮🇪|🇵🇹|🇨🇿|🇭🇺|🇷🇴|🇬🇷|🇧🇬|🇭🇷|🇸🇰|🇸🇮|🇱🇹|🇱🇻|🇪🇪|🇱🇺|🇲🇹|🇨🇾|🇮🇸|🇷🇸|🇺🇦|🇧🇾|🇲🇩|🇦🇱|🇲🇰|🇧🇦|🇲🇪|🇲🇨|🇱🇮|🇸🇲|🇦🇩|🇻🇦|欧洲|歐洲|英国|英國|伦敦|倫敦|德国|德國|法兰克福|法蘭克福|法国|法國|巴黎|荷兰|荷蘭|阿姆斯特丹|俄罗斯|俄羅斯|莫斯科|圣彼得堡|土耳其|伊斯坦布尔|意大利|米兰|米蘭|西班牙|马德里|馬德里|瑞典|斯德哥尔摩|瑞士|苏黎世|蘇黎世|波兰|波蘭|华沙|華沙|奥地利|奧地利|维也纳|維也納|比利时|比利時|丹麦|丹麥|芬兰|芬蘭|挪威|爱尔兰|愛爾蘭|都柏林|葡萄牙|里斯本|捷克|布拉格|匈牙利|布达佩斯|布達佩斯|罗马尼亚|羅馬尼亞|希腊|希臘|雅典|乌克兰|烏克蘭|(?<![A-Za-z])(?:UK|DEU|GBR|FRA|NLD|RUS|POL|TUR|ITA|ESP|SWE|CHE|AUT|BEL|DNK|FIN|NOR|IRL|PRT|CZE|HUN|ROU|GRC)(?![A-Za-z])|europe|london|germany|frankfurt|france|paris|netherlands|amsterdam|russia|moscow|turkey|istanbul|italy|milan|spain|madrid|sweden|stockholm|switzerland|zurich|poland|warsaw|austria|vienna|ireland|dublin|portugal|lisbon|czech|prague|hungary|budapest|romania|greece|athens|ukraine|群|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|地址|频道|电报|无法|说明|提示|特别|访问|支持|教程|关注|更新|作者|加入|超时|收藏|优惠|福利|邀请|好友|失联|剩余|公益|发布|通路|登录|禁止|定时|渠道|牢记|永久|余额|阁下|本站|刷新|导航|建议|重置|以下|拒绝|⚠️|@|t\.me\/\+|\bexpire\b|\bhttps?:\/\/|\.com|\btraffic\b|\bused?\b|\btotal\b|\bpanel\b|\bchannel\b'
     empty-fallback: REJECT
   - url: 'http://www.gstatic.com/generate_204'
     interval: 300
